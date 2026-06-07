@@ -191,7 +191,10 @@ RAW2UI = {"free": "ok", "booked": "full", "closed": "closed"}
 
 
 def main():
-    today = datetime.date.today()
+    # サイトは日本時間で動くため「今日」もJSTで求める。
+    # （ランナーがUTCだと、JST 0時以降は前日を照会してシステムエラーになる）
+    JST = datetime.timezone(datetime.timedelta(hours=9))
+    today = datetime.datetime.now(JST).date()
 
     # 相手サイトが不安定で、200でも空き状況以外のページ（セッション切れ等）が
     # 返ることがあるため、新しいセッションで数回まで再試行する。
