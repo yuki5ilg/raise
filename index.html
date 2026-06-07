@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0a0e1a" />
+  <meta name="theme-color" content="#f3ebdd" />
   <title>raise | Badminton Team</title>
-  <meta name="description" content="バドミントンチーム raise の公式ホームページ。一緒に高みを目指す仲間を募集中。" />
+  <meta name="description" content="バドミントンチーム raise の公式ホームページ。神戸市バドミントン大会 春季リーグ戦 男子5部A 優勝。一緒に高みを目指す仲間を募集中。" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet" />
@@ -15,6 +15,7 @@
   <!-- ===== ログインゲート ===== -->
   <div id="login" class="login">
     <div class="login__bg" aria-hidden="true"></div>
+    <div class="login__overlay" aria-hidden="true"></div>
     <form id="loginForm" class="login__card" autocomplete="off">
       <div class="login__logo">raise</div>
       <p class="login__lead">合言葉を入力してください</p>
@@ -43,9 +44,9 @@
       <a href="#top" class="brand">raise</a>
       <nav class="nav" id="nav">
         <a href="#about">About</a>
-        <a href="#members">Members</a>
+        <a href="#champions">Champions</a>
+        <a href="#spirit">Spirit</a>
         <a href="#schedule">Schedule</a>
-        <a href="#gallery">Gallery</a>
         <a href="#join">Join</a>
       </nav>
       <button class="nav-toggle" id="navToggle" aria-label="メニュー" aria-expanded="false">
@@ -55,26 +56,31 @@
 
     <!-- ヒーロー -->
     <section class="hero" id="top">
-      <div class="hero__bg" aria-hidden="true"></div>
       <div class="hero__inner">
-        <p class="hero__tag">BADMINTON TEAM</p>
-        <h1 class="hero__title">
-          <span>raise</span>
-          <span class="hero__sub">高みへ、もっと上へ。</span>
-        </h1>
-        <p class="hero__lead">
-          年齢も経験も関係ない。<br />
-          ただ「うまくなりたい」という気持ちひとつで集まった、<br class="pc-only" />
-          バドミントンチームです。
-        </p>
-        <div class="hero__actions">
-          <a href="#join" class="btn btn--primary">仲間になる</a>
-          <a href="#about" class="btn btn--ghost">チームを知る</a>
+        <div class="hero__text">
+          <p class="hero__tag">BADMINTON TEAM</p>
+          <h1 class="hero__title">raise</h1>
+          <p class="hero__sub">高みへ、もっと上へ。</p>
+          <p class="hero__badge">
+            <span class="hero__badge-ico">🏆</span>
+            令和8年度 神戸市バドミントン大会 春季リーグ戦 男子5部A <strong>優勝</strong>
+          </p>
+          <p class="hero__lead">
+            年齢も経験も関係ない。<br />
+            「うまくなりたい」という気持ちひとつで集まった、<br class="pc-only" />
+            9人のバドミントンチームです。
+          </p>
+          <div class="hero__actions">
+            <a href="#join" class="btn btn--primary">仲間になる</a>
+            <a href="#about" class="btn btn--ghost">チームを知る</a>
+          </div>
         </div>
+        <figure class="hero__photo">
+          <img src="images/photo3.jpeg" alt="優勝メダルと賞状を手にする raise のメンバー" loading="eager" />
+          <figcaption>優勝の瞬間 — raise メンバー</figcaption>
+        </figure>
       </div>
-      <a href="#about" class="hero__scroll" aria-label="下へスクロール">
-        <span></span>
-      </a>
+      <a href="#about" class="hero__scroll" aria-label="下へスクロール"><span></span></a>
     </section>
 
     <!-- About -->
@@ -95,9 +101,9 @@
           </p>
         </div>
         <ul class="stats reveal">
-          <li><span class="stats__num" data-count="40">0</span><span class="stats__label">メンバー</span></li>
+          <li><span class="stats__num" data-count="9">0</span><span class="stats__label">メンバー</span></li>
           <li><span class="stats__num" data-count="2">0</span><span class="stats__label">週あたり練習</span></li>
-          <li><span class="stats__num" data-count="6">0</span><span class="stats__label">活動年数</span></li>
+          <li><span class="stats__num" data-count="1" data-suffix="冠">0</span><span class="stats__label">リーグ優勝</span></li>
         </ul>
       </div>
 
@@ -114,49 +120,42 @@
         </article>
         <article class="feature reveal">
           <div class="feature__icon">🏆</div>
-          <h3>大会にも挑戦</h3>
-          <p>市民大会やリーグ戦にも参加。本気で勝ちにいく経験ができます。</p>
+          <h3>大会で勝つ</h3>
+          <p>市民大会やリーグ戦に挑戦。本気で勝ちにいく経験ができます。</p>
         </article>
       </div>
     </section>
 
-    <!-- Members -->
-    <section class="section members" id="members">
-      <div class="section__head reveal">
-        <p class="section__tag">MEMBERS</p>
-        <h2 class="section__title">メンバー紹介</h2>
-        <p class="section__desc">個性豊かなメンバーが集まっています。（写真は後ほど追加予定）</p>
+    <!-- Champions（優勝） -->
+    <section class="section champions" id="champions">
+      <div class="champions__grid">
+        <figure class="champions__photo reveal">
+          <img src="images/photo1.jpeg" alt="神戸市バドミントン大会 春季リーグ戦 男子5部A 優勝の賞状とメダル" loading="lazy" />
+        </figure>
+        <div class="champions__text reveal">
+          <p class="section__tag">CHAMPIONS</p>
+          <h2 class="section__title">優勝、つかみました。</h2>
+          <p class="champions__lead">
+            令和8年度 神戸市バドミントン大会 春季リーグ戦・男子5部Aにて、
+            チーム raise が<strong>優勝</strong>を果たしました。
+          </p>
+          <ul class="champions__list">
+            <li><span>大会</span>神戸市バドミントン大会 春季リーグ戦</li>
+            <li><span>部門</span>男子5部A</li>
+            <li><span>結果</span>優勝 🥇</li>
+          </ul>
+        </div>
       </div>
-      <div class="member-grid">
-        <!-- 写真は後で data-photo を画像URLに差し替え -->
-        <figure class="member reveal">
-          <div class="member__photo" data-photo></div>
-          <figcaption>
-            <span class="member__name">キャプテン</span>
-            <span class="member__role">Captain</span>
-          </figcaption>
-        </figure>
-        <figure class="member reveal">
-          <div class="member__photo" data-photo></div>
-          <figcaption>
-            <span class="member__name">エース</span>
-            <span class="member__role">Singles</span>
-          </figcaption>
-        </figure>
-        <figure class="member reveal">
-          <div class="member__photo" data-photo></div>
-          <figcaption>
-            <span class="member__name">ダブルス職人</span>
-            <span class="member__role">Doubles</span>
-          </figcaption>
-        </figure>
-        <figure class="member reveal">
-          <div class="member__photo" data-photo></div>
-          <figcaption>
-            <span class="member__name">ムードメーカー</span>
-            <span class="member__role">Mixed</span>
-          </figcaption>
-        </figure>
+    </section>
+
+    <!-- Spirit（円陣） -->
+    <section class="spirit" id="spirit">
+      <div class="spirit__bg" aria-hidden="true"></div>
+      <div class="spirit__overlay" aria-hidden="true"></div>
+      <div class="spirit__inner reveal">
+        <p class="section__tag">TEAM SPIRIT</p>
+        <h2 class="spirit__quote">ひとつになって、<br />勝ちにいく。</h2>
+        <p class="spirit__lead">勝負の前の円陣。9人の気持ちがそろう、いちばん熱い瞬間です。</p>
       </div>
     </section>
 
@@ -192,23 +191,6 @@
             <p>近隣チームとの練習試合や市民大会への参加</p>
           </div>
         </div>
-      </div>
-    </section>
-
-    <!-- Gallery -->
-    <section class="section gallery" id="gallery">
-      <div class="section__head reveal">
-        <p class="section__tag">GALLERY</p>
-        <h2 class="section__title">ギャラリー</h2>
-        <p class="section__desc">活動の様子。（写真は後ほど追加予定）</p>
-      </div>
-      <div class="gallery-grid">
-        <div class="gallery__item reveal" data-photo></div>
-        <div class="gallery__item reveal" data-photo></div>
-        <div class="gallery__item reveal" data-photo></div>
-        <div class="gallery__item reveal" data-photo></div>
-        <div class="gallery__item reveal" data-photo></div>
-        <div class="gallery__item reveal" data-photo></div>
       </div>
     </section>
 

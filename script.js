@@ -99,12 +99,13 @@ function initSite() {
   const counters = document.querySelectorAll(".stats__num");
   const animateCount = (el) => {
     const target = Number(el.dataset.count || 0);
+    const suffix = el.dataset.suffix || "";
     const duration = 1400;
     const start = performance.now();
     const step = (now) => {
       const p = Math.min((now - start) / duration, 1);
       const eased = 1 - Math.pow(1 - p, 3);
-      el.textContent = Math.round(target * eased);
+      el.textContent = Math.round(target * eased) + suffix;
       if (p < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
@@ -123,7 +124,7 @@ function initSite() {
     );
     counters.forEach((el) => co.observe(el));
   } else {
-    counters.forEach((el) => (el.textContent = el.dataset.count));
+    counters.forEach((el) => (el.textContent = el.dataset.count + (el.dataset.suffix || "")));
   }
 }
 

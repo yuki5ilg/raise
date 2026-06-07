@@ -18,23 +18,20 @@
 | `styles.css` | デザイン・レスポンシブ対応 |
 | `script.js` | ログイン判定・アニメーション |
 
-## あとから写真を追加する方法
+## 写真について
 
-写真を入れたい場所には `data-photo` という目印が付いた要素があります（メンバー紹介・ギャラリー）。
-そこに背景画像を設定すると、自動で「PHOTO」のプレースホルダー表示が消えます。
+写真は `images/` フォルダにまとめています。
 
-例：メンバーやギャラリーの写真を差し替える場合、HTML を次のように編集します。
+| ファイル | 使用箇所 |
+| --- | --- |
+| `images/photo3.jpeg` | ヒーロー（トップの集合写真） |
+| `images/photo1.jpeg` | Champions（優勝の賞状・メダル） |
+| `images/photo2.jpeg` | Spirit（円陣）の背景 / ログイン画面の背景 |
 
-```html
-<!-- 変更前 -->
-<div class="gallery__item reveal" data-photo></div>
+写真を差し替えたいときは、同じ名前で `images/` に上書きするか、`index.html`・`styles.css` 内の
+`images/photoX.jpeg` のパスを新しいファイル名に変更してください。
 
-<!-- 変更後（images フォルダに置いた写真を指定） -->
-<div class="gallery__item reveal" data-photo
-     style="background-image:url('images/practice01.jpg'); background-size:cover; background-position:center;"></div>
-```
-
-画像は `images/` フォルダなどを作ってまとめておくと管理しやすいです。
+写真を追加してセクションを増やしたい場合は気軽に依頼してください。
 
 ## カスタマイズ
 
