@@ -192,13 +192,24 @@ RAW2UI = {"free": "ok", "booked": "full", "closed": "closed"}
 
 def main():
     today = datetime.date.today()
-    session = requests.Session()
-    session.headers["User-Agent"] = UA
-    session.mount("https://", LegacyTLSAdapter())
 
-    html = reach_availability(session, today)
-    if "施設別空き状況照会" not in html:
-        print("ERROR: 空き状況ページに到達できませんでした", file=sys.stderr)
+    # 相手サイトが不安定で、200でも空き状況以外のページ（セッション切れ等）が
+    # 返ることがあるため、新しいセッションで数回まで再試行する。
+    html = ""
+    for attempt in range(4):
+        session = requests.Session()
+        session.headers["User-Agent"] = UA
+        session.mount("https://", LegacyTLSAdapter())
+        try:
+            html = reach_availability(session, today)
+        except Exception as e:  # ネットワーク/TLS等の一時失敗も再試行対象
+            print(f"到達リトライ {attempt + 1}/4: {e}", file=sys.stderr)
+            html = ""
+        if "施設別空き状況照会" in html:
+            break
+        time.sleep(3 * (attempt + 1))
+    else:
+        print("ERROR: 空き状況ページに到達できませんでした（リトライ上限）", file=sys.stderr)
         sys.exit(1)
 
     # 施設名 -> {date: {slot: raw status}}
