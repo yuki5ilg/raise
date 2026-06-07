@@ -3,8 +3,8 @@ name: Update gym availability
 # 体育館の空き状況を定期取得して data/availability.json を更新・コミットする。
 on:
   schedule:
-    - cron: "0 21,3,9 * * *"   # UTC。JST 06:00 / 12:00 / 18:00 の1日3回
-  workflow_dispatch:            # 手動実行も可
+    - cron: "0 * * * *"   # 毎時0分（1時間ごと）
+  workflow_dispatch:        # 手動実行も可
 
 permissions:
   contents: write

@@ -43,7 +43,7 @@
 | ファイル | 役割 |
 | --- | --- |
 | `scripts/scrape_availability.py` | あじさいネットから空き状況を取得し `data/availability.json` を生成 |
-| `.github/workflows/availability.yml` | 1日3回（JST 06/12/18時）+ 手動で上記を実行しコミット |
+| `.github/workflows/availability.yml` | 1時間ごと + 手動で上記を実行しコミット |
 | `data/availability.json` | カレンダーが読み込むデータ（○=空き △=一部空き ×=予約済み 休=休館） |
 
 - **対象体育館を変える**：`scripts/scrape_availability.py` 上部の `TARGETS` を編集
