@@ -145,7 +145,7 @@ function initCalendar() {
   const updatedEl = document.getElementById("calUpdated");
   const sourceEl = document.getElementById("calSource");
 
-  const MARK = { ok: "○", few: "△", full: "×" };
+  const MARK = { ok: "○", few: "△", full: "×", closed: "休" };
   const today = new Date();
   let data = null;
   let activeGym = 0;

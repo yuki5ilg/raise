@@ -16,7 +16,7 @@
 | --- | --- |
 | `index.html` | ページ本体（ログイン画面 + ホームページ） |
 | `styles.css` | デザイン・レスポンシブ対応 |
-| `script.js` | ログイン判定・アニメーション |
+| `script.js` | ログイン判定・アニメーション・空き状況カレンダー |
 
 ## 写真について
 
@@ -24,14 +24,35 @@
 
 | ファイル | 使用箇所 |
 | --- | --- |
-| `images/photo3.jpeg` | ヒーロー（トップの集合写真） |
-| `images/photo1.jpeg` | Champions（優勝の賞状・メダル） |
-| `images/photo2.jpeg` | Spirit（円陣）の背景 / ログイン画面の背景 |
+| `images/photo5.jpeg` | ヒーロー（チーム集合・後ろ姿）/ ギャラリー |
+| `images/photo1.jpeg` | Champions（優勝の賞状・メダル）/ ギャラリー |
+| `images/photo2.jpeg` | Spirit（円陣）/ ギャラリー / ログイン画面の背景 |
+| `images/photo3.jpeg` | ギャラリー（優勝メンバー） |
+| `images/photo4.jpeg` | フッター（ロゴ） |
 
 写真を差し替えたいときは、同じ名前で `images/` に上書きするか、`index.html`・`styles.css` 内の
 `images/photoX.jpeg` のパスを新しいファイル名に変更してください。
 
 写真を追加してセクションを増やしたい場合は気軽に依頼してください。
+
+## 体育館の空き状況カレンダー
+
+「空き状況」セクションでは、神戸市「あじさいネット」施設予約システムの空き状況照会
+（ログイン不要の公開情報）を自動取得し、体育館ごとに月カレンダーで表示します。
+
+| ファイル | 役割 |
+| --- | --- |
+| `scripts/scrape_availability.py` | あじさいネットから空き状況を取得し `data/availability.json` を生成 |
+| `.github/workflows/availability.yml` | 1日3回（JST 06/12/18時）+ 手動で上記を実行しコミット |
+| `data/availability.json` | カレンダーが読み込むデータ（○=空き △=一部空き ×=予約済み 休=休館） |
+
+- **対象体育館を変える**：`scripts/scrape_availability.py` 上部の `TARGETS` を編集
+  （施設キーは検索結果ページの `chng_chkboxImage` 第2引数）
+- **取得する週数を変える**：同ファイルの `NUM_WEEKS`
+- ブラウザから外部サイトを直接取得することは CORS・セッションの制約でできないため、
+  GitHub Action 側で定期取得して JSON に保存する方式にしています。
+- スクレイピングは公開情報を低頻度で取得する設計です。先方サイトの仕様変更で
+  動かなくなることがあります（その場合はセレクタ等の調整が必要）。
 
 ## カスタマイズ
 

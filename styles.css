@@ -682,6 +682,7 @@ img { max-width: 100%; display: block; }
 .dot--ok { background: #3f9b6b; }
 .dot--few { background: #d9a23f; }
 .dot--full { background: #c0563f; }
+.dot--closed { background: #9b8f96; }
 .dot--none { background: #cfc4b1; }
 .cal__weekdays,
 .cal__grid {
@@ -718,10 +719,12 @@ img { max-width: 100%; display: block; }
 .cal__cell--ok { background: rgba(63, 155, 107, 0.14); }
 .cal__cell--few { background: rgba(217, 162, 63, 0.16); }
 .cal__cell--full { background: rgba(192, 86, 63, 0.14); }
+.cal__cell--closed { background: rgba(155, 143, 150, 0.16); }
 .cal__cell .mark { font-size: 11px; line-height: 1; }
 .cal__cell--ok .mark { color: #3f9b6b; }
 .cal__cell--few .mark { color: #d9a23f; }
 .cal__cell--full .mark { color: #c0563f; }
+.cal__cell--closed .mark { color: #8a7f86; }
 .cal__cell--none .mark { color: #b6a98f; }
 .cal__meta {
   margin-top: 18px;
