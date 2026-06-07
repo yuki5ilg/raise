@@ -46,7 +46,7 @@
         <a href="#about">About</a>
         <a href="#champions">Champions</a>
         <a href="#spirit">Spirit</a>
-        <a href="#schedule">Schedule</a>
+        <a href="#gallery">Gallery</a>
         <a href="#join">Join</a>
       </nav>
       <button class="nav-toggle" id="navToggle" aria-label="メニュー" aria-expanded="false">
@@ -54,31 +54,26 @@
       </button>
     </header>
 
-    <!-- ヒーロー -->
+    <!-- ヒーロー（背景写真：チーム集合） -->
     <section class="hero" id="top">
+      <div class="hero__bg" aria-hidden="true"></div>
+      <div class="hero__overlay" aria-hidden="true"></div>
       <div class="hero__inner">
-        <div class="hero__text">
-          <p class="hero__tag">BADMINTON TEAM</p>
-          <h1 class="hero__title">raise</h1>
-          <p class="hero__sub">高みへ、もっと上へ。</p>
-          <p class="hero__badge">
-            <span class="hero__badge-ico">🏆</span>
-            令和8年度 神戸市バドミントン大会 春季リーグ戦 男子5部A <strong>優勝</strong>
-          </p>
-          <p class="hero__lead">
-            年齢も経験も関係ない。<br />
-            「うまくなりたい」という気持ちひとつで集まった、<br class="pc-only" />
-            9人のバドミントンチームです。
-          </p>
-          <div class="hero__actions">
-            <a href="#join" class="btn btn--primary">仲間になる</a>
-            <a href="#about" class="btn btn--ghost">チームを知る</a>
-          </div>
+        <p class="hero__tag">BADMINTON TEAM</p>
+        <h1 class="hero__title">raise</h1>
+        <p class="hero__sub">高みへ、もっと上へ。</p>
+        <p class="hero__badge">
+          <span class="hero__badge-ico">🏆</span>
+          令和8年度 神戸市バドミントン大会 春季リーグ戦 男子5部A <strong>優勝</strong>
+        </p>
+        <p class="hero__lead">
+          年齢も経験も関係ない。「うまくなりたい」という<br class="pc-only" />
+          気持ちひとつで集まった、9人のバドミントンチームです。
+        </p>
+        <div class="hero__actions">
+          <a href="#join" class="btn btn--primary">仲間になる</a>
+          <a href="#about" class="btn btn--light">チームを知る</a>
         </div>
-        <figure class="hero__photo">
-          <img src="images/photo3.jpeg" alt="優勝メダルと賞状を手にする raise のメンバー" loading="eager" />
-          <figcaption>優勝の瞬間 — raise メンバー</figcaption>
-        </figure>
       </div>
       <a href="#about" class="hero__scroll" aria-label="下へスクロール"><span></span></a>
     </section>
@@ -159,6 +154,33 @@
       </div>
     </section>
 
+    <!-- Gallery（写真ギャラリー） -->
+    <section class="section gallery" id="gallery">
+      <div class="section__head reveal">
+        <p class="section__tag">GALLERY</p>
+        <h2 class="section__title">ギャラリー</h2>
+        <p class="section__desc">活動の様子をすこしだけ。</p>
+      </div>
+      <div class="gallery-grid">
+        <figure class="gallery__item gallery__item--wide reveal">
+          <img src="images/photo5.jpeg" alt="お揃いのチームTシャツで肩を組む raise の9人" loading="lazy" />
+          <figcaption>チームTシャツでONE TEAM</figcaption>
+        </figure>
+        <figure class="gallery__item gallery__item--tall reveal">
+          <img src="images/photo2.jpeg" alt="試合前の円陣" loading="lazy" />
+          <figcaption>勝負前の円陣</figcaption>
+        </figure>
+        <figure class="gallery__item reveal">
+          <img src="images/photo3.jpeg" alt="優勝メダルと賞状を手にするメンバー" loading="lazy" />
+          <figcaption>優勝のよろこび</figcaption>
+        </figure>
+        <figure class="gallery__item reveal">
+          <img src="images/photo1.jpeg" alt="優勝の賞状とメダル" loading="lazy" />
+          <figcaption>勝ち取った賞状</figcaption>
+        </figure>
+      </div>
+    </section>
+
     <!-- Schedule -->
     <section class="section schedule" id="schedule">
       <div class="section__head reveal">
@@ -211,9 +233,9 @@
       </div>
     </section>
 
-    <!-- Footer -->
+    <!-- Footer（ロゴ） -->
     <footer class="footer">
-      <div class="footer__brand">raise</div>
+      <img class="footer__logo" src="images/photo4.jpeg" alt="raise ロゴ" loading="lazy" />
       <p class="footer__copy">© <span id="year"></span> raise Badminton Team. All rights reserved.</p>
     </footer>
   </div>
