@@ -1,6 +1,12 @@
 // ===== 設定 =====
-// ホームページを表示するための合言葉。ここを変えればパスワードを変更できます。
-const PASSCODE = "raise";
+// ログインの合言葉は平文では持たず、PBKDF2-SHA256 の検証ハッシュだけを置く。
+// 入力を同じ方式でハッシュ化して照合するため、ソースを見ても元の合言葉は分からない。
+// 合言葉を変えるには tools/passcode.html で新しい検証ハッシュを生成して差し替える。
+const PASS_VERIFIER = {
+  salt: "tJQUOC5I/1Bjptdg1zwLMQ==",
+  iterations: 200000,
+  hash: "LDl9EINX/zHDb86x2+Sv+AVB/GdJIWkdCcz4zivSwx8=",
+};
 const STORAGE_KEY = "raise_authed";
 
 const loginEl = document.getElementById("login");
@@ -8,6 +14,25 @@ const siteEl = document.getElementById("site");
 const formEl = document.getElementById("loginForm");
 const inputEl = document.getElementById("passcode");
 const errorEl = document.getElementById("loginError");
+
+const b64ToBytes = (b64) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+const bytesToB64 = (buf) => {
+  let s = "";
+  new Uint8Array(buf).forEach((b) => (s += String.fromCharCode(b)));
+  return btoa(s);
+};
+
+// 入力された合言葉が検証ハッシュと一致するか（PBKDF2-SHA256）
+async function verifyPasscode(password) {
+  const km = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]
+  );
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt: b64ToBytes(PASS_VERIFIER.salt), iterations: PASS_VERIFIER.iterations, hash: "SHA-256" },
+    km, 256
+  );
+  return bytesToB64(bits) === PASS_VERIFIER.hash;
+}
 
 // ===== ログイン判定 =====
 function showSite() {
@@ -28,21 +53,30 @@ function checkAuth() {
   }
 }
 
+function rejectLogin() {
+  errorEl.textContent = "合言葉が違います。もう一度お試しください。";
+  loginEl.classList.add("shake");
+  inputEl.select();
+  setTimeout(() => loginEl.classList.remove("shake"), 450);
+}
+
 formEl.addEventListener("submit", (e) => {
   e.preventDefault();
-  const value = inputEl.value.trim().toLowerCase();
-  if (value === PASSCODE) {
-    sessionStorage.setItem(STORAGE_KEY, "1");
-    errorEl.textContent = "";
-    loginEl.style.opacity = "0";
-    loginEl.style.transition = "opacity 0.5s";
-    setTimeout(showSite, 450);
-  } else {
-    errorEl.textContent = "合言葉が違います。もう一度お試しください。";
-    loginEl.classList.add("shake");
-    inputEl.select();
-    setTimeout(() => loginEl.classList.remove("shake"), 450);
-  }
+  const value = inputEl.value.trim();
+  if (!value) return;
+  verifyPasscode(value)
+    .then((ok) => {
+      if (ok) {
+        sessionStorage.setItem(STORAGE_KEY, "1");
+        errorEl.textContent = "";
+        loginEl.style.opacity = "0";
+        loginEl.style.transition = "opacity 0.5s";
+        setTimeout(showSite, 450);
+      } else {
+        rejectLogin();
+      }
+    })
+    .catch(rejectLogin);
 });
 
 // ===== ホームページの初期化（ログイン後に実行） =====
