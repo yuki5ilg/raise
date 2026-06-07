@@ -10,8 +10,32 @@ data/availability.json を生成する。
 
 依存: requests（標準ライブラリ + requests のみ）
 """
-import sys, re, json, time, datetime, urllib.parse
+import sys, re, json, time, datetime, urllib.parse, ssl
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util import ssl_
+
+
+class LegacyTLSAdapter(HTTPAdapter):
+    """相手サーバー(shisetsu-yoyaku.jp)が古いTLS実装で、OpenSSL 3.x が既定で無効化する
+    レガシー再ネゴシエーションを要求するため、それを許可するSSLコンテキストを使う。
+    （UNSAFE_LEGACY_RENEGOTIATION_DISABLED 対策）"""
+
+    def _ctx(self):
+        ctx = ssl_.create_urllib3_context()
+        # OP_LEGACY_SERVER_CONNECT (= 0x4) を有効化（3.11 では属性が無いため数値で）
+        ctx.options |= getattr(ssl, "OP_LEGACY_SERVER_CONNECT", 0x4)
+        # 古いサーバー向けにセキュリティレベルを下げる（弱い鍵交換でも接続可に）
+        ctx.set_ciphers("DEFAULT@SECLEVEL=1")
+        return ctx
+
+    def init_poolmanager(self, *args, **kwargs):
+        kwargs["ssl_context"] = self._ctx()
+        return super().init_poolmanager(*args, **kwargs)
+
+    def proxy_manager_for(self, *args, **kwargs):
+        kwargs["ssl_context"] = self._ctx()
+        return super().proxy_manager_for(*args, **kwargs)
 
 BASE = "https://shisetsu-yoyaku.jp/ajisai"
 UA = "Mozilla/5.0 (compatible; raise-badminton-availability/1.0; +https://github.com/yuki5ilg/raise)"
@@ -170,6 +194,7 @@ def main():
     today = datetime.date.today()
     session = requests.Session()
     session.headers["User-Agent"] = UA
+    session.mount("https://", LegacyTLSAdapter())
 
     html = reach_availability(session, today)
     if "施設別空き状況照会" not in html:
