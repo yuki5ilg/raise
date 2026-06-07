@@ -127,28 +127,88 @@ function initSite() {
     counters.forEach((el) => (el.textContent = el.dataset.count + (el.dataset.suffix || "")));
   }
 
+  // 限定公開動画
+  initVideos();
+
   // 空き状況カレンダー
   initCalendar();
 }
 
+// ===== 限定公開YouTube動画 =====
+// data/videos.json の url からYouTube動画IDを取り出して埋め込み表示する。
+// 限定公開動画は「リンクを知っている人だけ」が見られる仕組みのため、
+// 自動収集はできない。url を手動で登録する運用。
+function initVideos() {
+  const grid = document.getElementById("videoGrid");
+  if (!grid) return;
+
+  const videoId = (url) => {
+    const m = String(url).match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/);
+    return m ? m[1] : null;
+  };
+
+  fetch("data/videos.json", { cache: "no-store" })
+    .then((res) => (res.ok ? res.json() : { videos: [] }))
+    .then((json) => {
+      const vids = (json.videos || [])
+        .map((v) => ({ title: v.title || "", id: videoId(v.url) }))
+        .filter((v) => v.id);
+      if (!vids.length) {
+        grid.innerHTML =
+          '<p class="video__empty">動画は準備中です。<br />YouTubeの限定公開リンクを登録すると、ここに表示されます。</p>';
+        return;
+      }
+      grid.innerHTML = "";
+      vids.forEach((v) => {
+        const fig = document.createElement("figure");
+        fig.className = "video__item";
+        const frame = document.createElement("div");
+        frame.className = "video__frame";
+        const iframe = document.createElement("iframe");
+        iframe.src = `https://www.youtube-nocookie.com/embed/${v.id}`;
+        iframe.title = v.title || "raise practice video";
+        iframe.loading = "lazy";
+        iframe.allow =
+          "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+        iframe.allowFullscreen = true;
+        frame.appendChild(iframe);
+        fig.appendChild(frame);
+        if (v.title) {
+          const cap = document.createElement("figcaption");
+          cap.textContent = v.title;
+          fig.appendChild(cap);
+        }
+        grid.appendChild(fig);
+      });
+    })
+    .catch(() => {
+      grid.innerHTML = '<p class="video__empty">動画を読み込めませんでした。</p>';
+    });
+}
+
 // ===== 空き状況カレンダー =====
-// data/availability.json を読み込み、体育館ごとの空き状況を月カレンダーで表示する。
-// JSON の status は "ok"(空きあり) / "few"(残りわずか) / "full"(満)。
-// データの無い日は「情報なし」として扱う。
+// data/availability.json を読み込み、体育館×時間帯ごとの空き状況を月カレンダーで表示する。
+// dates[日付] は { "時間帯": "ok"|"full"|"closed" } の形。
+// 既定の時間帯は練習枠の 21:00～23:00。日をタップするとその日の全時間帯を表示する。
 function initCalendar() {
   const root = document.getElementById("cal");
   if (!root) return;
 
   const gymsEl = document.getElementById("calGyms");
+  const slotsEl = document.getElementById("calSlots");
   const gridEl = document.getElementById("calGrid");
+  const detailEl = document.getElementById("calDetail");
   const monthEl = document.getElementById("calMonth");
   const updatedEl = document.getElementById("calUpdated");
   const sourceEl = document.getElementById("calSource");
 
-  const MARK = { ok: "○", few: "△", full: "×", closed: "休" };
+  const MARK = { ok: "○", full: "×", closed: "休" };
+  const LABEL = { ok: "空き", full: "予約済み", closed: "休館", none: "情報なし" };
   const today = new Date();
   let data = null;
   let activeGym = 0;
+  let activeSlot = null;
+  let selectedDate = null;
   let view = new Date(today.getFullYear(), today.getMonth(), 1);
 
   const pad = (n) => String(n).padStart(2, "0");
@@ -168,7 +228,11 @@ function initCalendar() {
           ? json.updated
           : `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
       }
+      // 既定の時間帯：21:00枠を優先、無ければ最後の枠
+      const slots = json.slots || [];
+      activeSlot = slots.find((s) => s.indexOf("21:00") === 0) || slots[slots.length - 1] || null;
       renderGyms();
+      renderSlots();
       renderMonth();
     })
     .catch(() => {
@@ -189,6 +253,7 @@ function initCalendar() {
       btn.setAttribute("role", "tab");
       btn.addEventListener("click", () => {
         activeGym = i;
+        selectedDate = null;
         renderGyms();
         renderMonth();
       });
@@ -196,9 +261,31 @@ function initCalendar() {
     });
   }
 
-  function renderMonth() {
+  function renderSlots() {
+    if (!slotsEl) return;
+    slotsEl.innerHTML = "";
+    (data.slots || []).forEach((slot) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "cal__slot" + (slot === activeSlot ? " is-active" : "");
+      btn.textContent = slot;
+      btn.addEventListener("click", () => {
+        activeSlot = slot;
+        renderSlots();
+        renderMonth();
+      });
+      slotsEl.appendChild(btn);
+    });
+  }
+
+  function statusFor(dateStr) {
     const gym = (data.gyms || [])[activeGym];
-    const dates = (gym && gym.dates) || {};
+    const day = gym && gym.dates && gym.dates[dateStr];
+    if (!day) return "none";
+    return day[activeSlot] || "none";
+  }
+
+  function renderMonth() {
     const y = view.getFullYear();
     const m = view.getMonth();
     monthEl.textContent = `${y}年 ${m + 1}月`;
@@ -213,9 +300,12 @@ function initCalendar() {
       gridEl.appendChild(cell);
     }
     for (let d = 1; d <= daysInMonth; d++) {
-      const status = dates[ymd(y, m, d)] || "none";
-      const cell = document.createElement("div");
+      const dateStr = ymd(y, m, d);
+      const status = statusFor(dateStr);
+      const cell = document.createElement("button");
+      cell.type = "button";
       cell.className = `cal__cell cal__cell--${status}`;
+      if (dateStr === selectedDate) cell.classList.add("cal__cell--sel");
       if (y === today.getFullYear() && m === today.getMonth() && d === today.getDate()) {
         cell.classList.add("cal__cell--today");
       }
@@ -226,8 +316,34 @@ function initCalendar() {
       mark.className = "mark";
       mark.textContent = MARK[status] || "–";
       cell.append(num, mark);
+      cell.addEventListener("click", () => {
+        selectedDate = dateStr;
+        renderMonth();
+        renderDetail(dateStr);
+      });
       gridEl.appendChild(cell);
     }
+    if (selectedDate) renderDetail(selectedDate);
+  }
+
+  function renderDetail(dateStr) {
+    if (!detailEl) return;
+    const gym = (data.gyms || [])[activeGym];
+    const day = (gym && gym.dates && gym.dates[dateStr]) || null;
+    const dt = new Date(dateStr + "T00:00:00");
+    const wd = "日月火水木金土"[dt.getDay()];
+    let html = `<div class="cal__detailhead">${dt.getMonth() + 1}月${dt.getDate()}日（${wd}）・${gym ? gym.name : ""}</div>`;
+    if (!day) {
+      html += `<p class="cal__empty">この日の情報はありません。</p>`;
+    } else {
+      html += '<ul class="cal__slotlist">';
+      (data.slots || []).forEach((slot) => {
+        const st = day[slot] || "none";
+        html += `<li class="cal__slotrow cal__slotrow--${st}"><span>${slot}</span><span class="mark">${MARK[st] || "–"} ${LABEL[st]}</span></li>`;
+      });
+      html += "</ul>";
+    }
+    detailEl.innerHTML = html;
   }
 
   document.getElementById("calPrev").addEventListener("click", () => {

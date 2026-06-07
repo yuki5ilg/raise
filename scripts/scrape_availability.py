@@ -151,27 +151,19 @@ def parse_week(html, week_start: datetime.date):
             label = re.sub(r'<[^>]*>', '', cells[0])
             if "～" not in label and ":" not in label:
                 continue  # 時間帯行のみ
+            slot = re.sub(r'\s|　', '', label)  # 例: "21:00 ～ 23:00" -> "21:00～23:00"
             for col in range(1, 8):
                 alts = re.findall(r'alt="([^"]*)"', cells[col])
                 status = next((STATUS_IMG[a] for a in alts if a in STATUS_IMG), None)
                 if status is None:
                     continue
                 d = (week_start + datetime.timedelta(days=col - 1)).isoformat()
-                day_map.setdefault(d, []).append(status)
+                day_map.setdefault(d, {})[slot] = status  # raw: free/booked/closed
     return result
 
 
-def aggregate(slots):
-    """1日のスロット状態リスト -> ok / few / full / closed。"""
-    bookable = [s for s in slots if s != "closed"]
-    if not bookable:
-        return "closed"
-    free = bookable.count("free")
-    if free == 0:
-        return "full"
-    if free == len(bookable):
-        return "ok"
-    return "few"
+# 取得した生ステータス -> UI用ステータス
+RAW2UI = {"free": "ok", "booked": "full", "closed": "closed"}
 
 
 def main():
@@ -184,8 +176,9 @@ def main():
         print("ERROR: 空き状況ページに到達できませんでした", file=sys.stderr)
         sys.exit(1)
 
-    # 施設名 -> {date: [slots]}
+    # 施設名 -> {date: {slot: raw status}}
     merged = {g: {} for g in TARGETS}
+    slot_set = set()
     week_start = today
     for week in range(NUM_WEEKS):
         if week > 0:
@@ -199,18 +192,21 @@ def main():
             time.sleep(1)  # 行儀よく
         for gym, days in parse_week(html, week_start).items():
             for d, slots in days.items():
-                merged[gym].setdefault(d, []).extend(slots)
+                merged[gym].setdefault(d, {}).update(slots)
+                slot_set.update(slots.keys())
 
     gyms = []
     for name in TARGETS:
-        dates = {d: aggregate(slots) for d, slots in sorted(merged[name].items())}
+        dates = {d: {s: RAW2UI[v] for s, v in sorted(slots.items())}
+                 for d, slots in sorted(merged[name].items())}
         gyms.append({"id": name, "name": name, "dates": dates})
 
     out = {
         "updated": datetime.datetime.now(
             datetime.timezone(datetime.timedelta(hours=9))).isoformat(timespec="minutes"),
         "source": f"{BASE}/yoyaku/ShisetsuMultiSelect.cgi",
-        "note": "あじさいネット（神戸市 施設予約）の空き状況照会より自動取得。○=空き △=一部空き ×=予約済み。実際の予約は公式サイトで。",
+        "note": "あじさいネット（神戸市 施設予約）の空き状況照会より自動取得。○=空き ×=予約済み 休=休館。実際の予約は公式サイトで。",
+        "slots": sorted(slot_set),  # 時間帯一覧（"09:00～11:00" ... "21:00～23:00"）
         "gyms": gyms,
     }
     with open("data/availability.json", "w", encoding="utf-8") as f:

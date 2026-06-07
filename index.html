@@ -48,6 +48,7 @@
         <a href="#about">About</a>
         <a href="#champions">Champions</a>
         <a href="#gallery">Gallery</a>
+        <a href="#movie">動画</a>
         <a href="#availability">空き状況</a>
         <a href="#join">Join</a>
       </nav>
@@ -96,8 +97,8 @@
             技術も気持ちも「引き上げていく」ことを大切にしているチームです。
           </p>
           <p>
-            初心者から経験者まで、レベルに合わせて練習できる環境を用意しています。
-            真剣に打ち込む時間も、笑い合える時間も、どちらも私たちの宝物です。
+            練習は夜の21:00〜23:00がメイン。基礎打ちから始めて、たっぷり練習、
+            最後は試合形式で締めくくります。みんなで同じメニューに打ち込みます。
           </p>
         </div>
         <ul class="stats reveal">
@@ -110,8 +111,8 @@
       <div class="features">
         <article class="feature reveal">
           <div class="feature__icon">🏸</div>
-          <h3>レベル別練習</h3>
-          <p>基礎から実戦まで。一人ひとりに合わせたメニューでステップアップ。</p>
+          <h3>実戦中心の練習</h3>
+          <p>基礎打ち30分→練習1時間→試合30分。みんな同じメニューで、たくさん打ちます。</p>
         </article>
         <article class="feature reveal">
           <div class="feature__icon">🤝</div>
@@ -189,6 +190,16 @@
       </div>
     </section>
 
+    <!-- Movie（限定公開動画） -->
+    <section class="section movie" id="movie">
+      <div class="section__head reveal">
+        <p class="section__tag">MOVIE</p>
+        <h2 class="section__title">練習動画</h2>
+        <p class="section__desc">限定公開動画です。このページを見られる人だけが視聴できます。</p>
+      </div>
+      <div class="video-grid" id="videoGrid"></div>
+    </section>
+
     <!-- Availability（空き状況カレンダー） -->
     <section class="section calendar" id="availability">
       <div class="section__head reveal">
@@ -205,17 +216,22 @@
             <button type="button" id="calNext" class="cal__navbtn" aria-label="次の月">›</button>
           </div>
         </div>
+        <div class="cal__slotbar">
+          <span class="cal__slotlabel">時間帯</span>
+          <div class="cal__slots" id="calSlots" role="tablist" aria-label="時間帯の選択"></div>
+        </div>
         <div class="cal__legend">
-          <span><i class="dot dot--ok"></i>空きあり</span>
-          <span><i class="dot dot--few"></i>一部空き</span>
+          <span><i class="dot dot--ok"></i>空き</span>
           <span><i class="dot dot--full"></i>予約済み</span>
-          <span><i class="dot dot--closed"></i>休館日</span>
+          <span><i class="dot dot--closed"></i>休館</span>
           <span><i class="dot dot--none"></i>情報なし</span>
+          <span class="cal__taphint">日付をタップで全時間帯を表示</span>
         </div>
         <div class="cal__weekdays">
           <span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span>
         </div>
         <div class="cal__grid" id="calGrid"></div>
+        <div class="cal__detail" id="calDetail"></div>
         <p class="cal__meta">
           <span class="cal__updated">🕒 最終更新: <span id="calUpdated">—</span></span>
           <span class="cal__interval">1時間ごとに自動更新</span>
@@ -233,27 +249,27 @@
       </div>
       <div class="timeline">
         <div class="timeline__item reveal">
-          <div class="timeline__day">水</div>
+          <div class="timeline__day">夜</div>
           <div class="timeline__body">
-            <h3>平日ナイター練習</h3>
-            <p class="timeline__time">19:00 – 21:00</p>
-            <p>基礎打ち・ゲーム練習</p>
+            <h3>メイン練習</h3>
+            <p class="timeline__time">21:00 – 23:00</p>
+            <p>基礎打ち 30分 → 練習 1時間 → 試合 30分 の流れがメインです。</p>
           </div>
         </div>
         <div class="timeline__item reveal">
-          <div class="timeline__day">土</div>
+          <div class="timeline__day">試合</div>
           <div class="timeline__body">
-            <h3>週末じっくり練習</h3>
-            <p class="timeline__time">13:00 – 17:00</p>
-            <p>フットワーク・パターン練習・試合形式</p>
+            <h3>試合中心</h3>
+            <p class="timeline__time">毎回</p>
+            <p>練習の締めはゲーム形式。実戦をたくさんこなして力をつけます。</p>
           </div>
         </div>
         <div class="timeline__item reveal">
-          <div class="timeline__day">不定</div>
+          <div class="timeline__day">大会</div>
           <div class="timeline__body">
             <h3>大会・交流戦</h3>
             <p class="timeline__time">月1回程度</p>
-            <p>近隣チームとの練習試合や市民大会への参加</p>
+            <p>近隣チームとの練習試合や市民大会への参加。</p>
           </div>
         </div>
       </div>
