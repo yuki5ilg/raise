@@ -28,8 +28,8 @@ body {
 }
 a { color: inherit; text-decoration: none; }
 img { max-width: 100%; display: block; }
-.pc-only { display: inline; }
-@media (max-width: 640px) { .pc-only { display: none; } }
+/* 文章を文節ごとに区切り、語の途中で改行されないようにする（日本語向け） */
+.nowrap { display: inline-block; }
 
 /* ===== ログインゲート ===== */
 .login {
@@ -259,22 +259,6 @@ img { max-width: 100%; display: block; }
   margin-top: 10px;
   animation: rise 0.8s 0.2s both;
 }
-.hero__badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 22px;
-  padding: 9px 16px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #6c4a1d;
-  background: linear-gradient(120deg, rgba(217, 154, 78, 0.22), rgba(181, 138, 60, 0.16));
-  border: 1px solid rgba(181, 138, 60, 0.35);
-  border-radius: 999px;
-  animation: rise 0.8s 0.28s both;
-}
-.hero__badge strong { color: var(--brand); }
-.hero__badge-ico { font-size: 15px; }
 .hero__lead {
   color: var(--muted);
   font-size: clamp(15px, 2.2vw, 17px);
@@ -585,35 +569,28 @@ img { max-width: 100%; display: block; }
   border-radius: var(--radius);
   overflow: hidden;
   box-shadow: var(--shadow-soft);
+  /* タップ時のハイライトのチラつきを抑える */
+  -webkit-tap-highlight-color: transparent;
 }
 /* 写真を切り取らず、そのままの縦横比で全体表示 */
-.gallery__item img { width: 100%; height: auto; display: block; }
-.gallery__item figcaption {
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  padding: 30px 16px 14px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #fff;
-  background: linear-gradient(transparent, rgba(30, 20, 10, 0.8));
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 0.3s, transform 0.3s;
-}
-.gallery__item:hover figcaption { opacity: 1; transform: translateY(0); }
-@media (hover: none) {
-  .gallery__item figcaption { opacity: 1; transform: none; }
+.gallery__item img {
+  width: 100%;
+  height: auto;
+  display: block;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* ===== Footer (ロゴ・ダーク) ===== */
 .footer {
   background: #15110d;
-  padding: 56px 24px 44px;
+  padding: 28px 24px 24px;
   text-align: center;
 }
 .footer__logo {
-  width: min(72vw, 320px);
-  margin: 0 auto 22px;
+  width: min(60vw, 260px);
+  margin: 0 auto 12px;
   mix-blend-mode: screen;
 }
 .footer__copy { color: rgba(255, 255, 255, 0.55); font-size: 13px; }
