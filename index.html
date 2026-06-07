@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0e1a" />
+  <title>raise | Badminton Team</title>
+  <meta name="description" content="バドミントンチーム raise の公式ホームページ。一緒に高みを目指す仲間を募集中。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ===== ログインゲート ===== -->
+  <div id="login" class="login">
+    <div class="login__bg" aria-hidden="true"></div>
+    <form id="loginForm" class="login__card" autocomplete="off">
+      <div class="login__logo">raise</div>
+      <p class="login__lead">合言葉を入力してください</p>
+      <div class="login__field">
+        <input
+          id="passcode"
+          type="password"
+          inputmode="text"
+          placeholder="パスワード"
+          aria-label="パスワード"
+          autocomplete="off"
+        />
+        <button type="submit" class="login__btn" aria-label="入る">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+      <p id="loginError" class="login__error" role="alert"></p>
+      <p class="login__hint">ヒント：チーム名を入力</p>
+    </form>
+  </div>
+
+  <!-- ===== ホームページ本体 ===== -->
+  <div id="site" class="site" hidden>
+    <!-- ヘッダー -->
+    <header class="header" id="header">
+      <a href="#top" class="brand">raise</a>
+      <nav class="nav" id="nav">
+        <a href="#about">About</a>
+        <a href="#members">Members</a>
+        <a href="#schedule">Schedule</a>
+        <a href="#gallery">Gallery</a>
+        <a href="#join">Join</a>
+      </nav>
+      <button class="nav-toggle" id="navToggle" aria-label="メニュー" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </header>
+
+    <!-- ヒーロー -->
+    <section class="hero" id="top">
+      <div class="hero__bg" aria-hidden="true"></div>
+      <div class="hero__inner">
+        <p class="hero__tag">BADMINTON TEAM</p>
+        <h1 class="hero__title">
+          <span>raise</span>
+          <span class="hero__sub">高みへ、もっと上へ。</span>
+        </h1>
+        <p class="hero__lead">
+          年齢も経験も関係ない。<br />
+          ただ「うまくなりたい」という気持ちひとつで集まった、<br class="pc-only" />
+          バドミントンチームです。
+        </p>
+        <div class="hero__actions">
+          <a href="#join" class="btn btn--primary">仲間になる</a>
+          <a href="#about" class="btn btn--ghost">チームを知る</a>
+        </div>
+      </div>
+      <a href="#about" class="hero__scroll" aria-label="下へスクロール">
+        <span></span>
+      </a>
+    </section>
+
+    <!-- About -->
+    <section class="section about" id="about">
+      <div class="section__head reveal">
+        <p class="section__tag">ABOUT</p>
+        <h2 class="section__title">私たちについて</h2>
+      </div>
+      <div class="about__grid">
+        <div class="about__text reveal">
+          <p>
+            <strong>raise（レイズ）</strong>は、バドミントンを通じて
+            技術も気持ちも「引き上げていく」ことを大切にしているチームです。
+          </p>
+          <p>
+            初心者から経験者まで、レベルに合わせて練習できる環境を用意しています。
+            真剣に打ち込む時間も、笑い合える時間も、どちらも私たちの宝物です。
+          </p>
+        </div>
+        <ul class="stats reveal">
+          <li><span class="stats__num" data-count="40">0</span><span class="stats__label">メンバー</span></li>
+          <li><span class="stats__num" data-count="2">0</span><span class="stats__label">週あたり練習</span></li>
+          <li><span class="stats__num" data-count="6">0</span><span class="stats__label">活動年数</span></li>
+        </ul>
+      </div>
+
+      <div class="features">
+        <article class="feature reveal">
+          <div class="feature__icon">🏸</div>
+          <h3>レベル別練習</h3>
+          <p>基礎から実戦まで。一人ひとりに合わせたメニューでステップアップ。</p>
+        </article>
+        <article class="feature reveal">
+          <div class="feature__icon">🤝</div>
+          <h3>あたたかい仲間</h3>
+          <p>はじめての人も馴染みやすい、フレンドリーな雰囲気が自慢です。</p>
+        </article>
+        <article class="feature reveal">
+          <div class="feature__icon">🏆</div>
+          <h3>大会にも挑戦</h3>
+          <p>市民大会やリーグ戦にも参加。本気で勝ちにいく経験ができます。</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Members -->
+    <section class="section members" id="members">
+      <div class="section__head reveal">
+        <p class="section__tag">MEMBERS</p>
+        <h2 class="section__title">メンバー紹介</h2>
+        <p class="section__desc">個性豊かなメンバーが集まっています。（写真は後ほど追加予定）</p>
+      </div>
+      <div class="member-grid">
+        <!-- 写真は後で data-photo を画像URLに差し替え -->
+        <figure class="member reveal">
+          <div class="member__photo" data-photo></div>
+          <figcaption>
+            <span class="member__name">キャプテン</span>
+            <span class="member__role">Captain</span>
+          </figcaption>
+        </figure>
+        <figure class="member reveal">
+          <div class="member__photo" data-photo></div>
+          <figcaption>
+            <span class="member__name">エース</span>
+            <span class="member__role">Singles</span>
+          </figcaption>
+        </figure>
+        <figure class="member reveal">
+          <div class="member__photo" data-photo></div>
+          <figcaption>
+            <span class="member__name">ダブルス職人</span>
+            <span class="member__role">Doubles</span>
+          </figcaption>
+        </figure>
+        <figure class="member reveal">
+          <div class="member__photo" data-photo></div>
+          <figcaption>
+            <span class="member__name">ムードメーカー</span>
+            <span class="member__role">Mixed</span>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- Schedule -->
+    <section class="section schedule" id="schedule">
+      <div class="section__head reveal">
+        <p class="section__tag">SCHEDULE</p>
+        <h2 class="section__title">活動スケジュール</h2>
+        <p class="section__desc">基本の活動日です。見学はいつでも歓迎！</p>
+      </div>
+      <div class="timeline">
+        <div class="timeline__item reveal">
+          <div class="timeline__day">水</div>
+          <div class="timeline__body">
+            <h3>平日ナイター練習</h3>
+            <p class="timeline__time">19:00 – 21:00</p>
+            <p>○○体育館 / 基礎打ち・ゲーム練習</p>
+          </div>
+        </div>
+        <div class="timeline__item reveal">
+          <div class="timeline__day">土</div>
+          <div class="timeline__body">
+            <h3>週末じっくり練習</h3>
+            <p class="timeline__time">13:00 – 17:00</p>
+            <p>○○スポーツセンター / フットワーク・パターン練習・試合形式</p>
+          </div>
+        </div>
+        <div class="timeline__item reveal">
+          <div class="timeline__day">不定</div>
+          <div class="timeline__body">
+            <h3>大会・交流戦</h3>
+            <p class="timeline__time">月1回程度</p>
+            <p>近隣チームとの練習試合や市民大会への参加</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gallery -->
+    <section class="section gallery" id="gallery">
+      <div class="section__head reveal">
+        <p class="section__tag">GALLERY</p>
+        <h2 class="section__title">ギャラリー</h2>
+        <p class="section__desc">活動の様子。（写真は後ほど追加予定）</p>
+      </div>
+      <div class="gallery-grid">
+        <div class="gallery__item reveal" data-photo></div>
+        <div class="gallery__item reveal" data-photo></div>
+        <div class="gallery__item reveal" data-photo></div>
+        <div class="gallery__item reveal" data-photo></div>
+        <div class="gallery__item reveal" data-photo></div>
+        <div class="gallery__item reveal" data-photo></div>
+      </div>
+    </section>
+
+    <!-- Join -->
+    <section class="section join" id="join">
+      <div class="join__card reveal">
+        <p class="section__tag">JOIN US</p>
+        <h2 class="join__title">一緒に高みを目指そう。</h2>
+        <p class="join__lead">
+          経験者も、ラケットを久しぶりに握る人も大歓迎。<br />
+          まずは気軽に見学からどうぞ。
+        </p>
+        <div class="join__actions">
+          <a href="mailto:raise.badminton@example.com" class="btn btn--primary">見学を申し込む</a>
+          <a href="#top" class="btn btn--ghost">トップへ戻る</a>
+        </div>
+        <p class="join__note">※ 連絡先メールは仮です。後で本物に差し替えてください。</p>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer__brand">raise</div>
+      <p class="footer__copy">© <span id="year"></span> raise Badminton Team. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
