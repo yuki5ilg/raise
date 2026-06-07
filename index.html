@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f3ebdd" />
+  <!-- iOSが住所/電話/日付を勝手にリンク(マップ等)化するのを無効化 -->
+  <meta name="format-detection" content="telephone=no, date=no, address=no, email=no" />
   <title>raise | Badminton Team</title>
   <meta name="description" content="バドミントンチーム raise の公式ホームページ。神戸市バドミントン大会 春季リーグ戦 男子5部A 優勝。一緒に高みを目指す仲間を募集中。" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -45,8 +47,8 @@
       <nav class="nav" id="nav">
         <a href="#about">About</a>
         <a href="#champions">Champions</a>
-        <a href="#spirit">Spirit</a>
         <a href="#gallery">Gallery</a>
+        <a href="#availability">空き状況</a>
         <a href="#join">Join</a>
       </nav>
       <button class="nav-toggle" id="navToggle" aria-label="メニュー" aria-expanded="false">
@@ -54,26 +56,29 @@
       </button>
     </header>
 
-    <!-- ヒーロー（背景写真：チーム集合） -->
+    <!-- ヒーロー（集合写真は切り取らず全体表示） -->
     <section class="hero" id="top">
-      <div class="hero__bg" aria-hidden="true"></div>
-      <div class="hero__overlay" aria-hidden="true"></div>
       <div class="hero__inner">
-        <p class="hero__tag">BADMINTON TEAM</p>
-        <h1 class="hero__title">raise</h1>
-        <p class="hero__sub">高みへ、もっと上へ。</p>
-        <p class="hero__badge">
-          <span class="hero__badge-ico">🏆</span>
-          令和8年度 神戸市バドミントン大会 春季リーグ戦 男子5部A <strong>優勝</strong>
-        </p>
-        <p class="hero__lead">
-          年齢も経験も関係ない。「うまくなりたい」という<br class="pc-only" />
-          気持ちひとつで集まった、9人のバドミントンチームです。
-        </p>
-        <div class="hero__actions">
-          <a href="#join" class="btn btn--primary">仲間になる</a>
-          <a href="#about" class="btn btn--light">チームを知る</a>
+        <div class="hero__text">
+          <p class="hero__tag">BADMINTON TEAM</p>
+          <h1 class="hero__title">raise</h1>
+          <p class="hero__sub">高みへ、もっと上へ。</p>
+          <p class="hero__badge">
+            <span class="hero__badge-ico">🏆</span>
+            令和8年度 神戸市バドミントン大会 春季リーグ戦 男子5部A <strong>優勝</strong>
+          </p>
+          <p class="hero__lead">
+            年齢も経験も関係ない。「うまくなりたい」という<br class="pc-only" />
+            気持ちひとつで集まった、9人のバドミントンチームです。
+          </p>
+          <div class="hero__actions">
+            <a href="#join" class="btn btn--primary">仲間になる</a>
+            <a href="#about" class="btn btn--ghost">チームを知る</a>
+          </div>
         </div>
+        <figure class="hero__photo">
+          <img src="images/photo5.jpeg" alt="お揃いのチームTシャツで肩を組む raise の9人" loading="eager" />
+        </figure>
       </div>
       <a href="#about" class="hero__scroll" aria-label="下へスクロール"><span></span></a>
     </section>
@@ -143,18 +148,21 @@
       </div>
     </section>
 
-    <!-- Spirit（円陣） -->
-    <section class="spirit" id="spirit">
-      <div class="spirit__bg" aria-hidden="true"></div>
-      <div class="spirit__overlay" aria-hidden="true"></div>
-      <div class="spirit__inner reveal">
-        <p class="section__tag">TEAM SPIRIT</p>
-        <h2 class="spirit__quote">ひとつになって、<br />勝ちにいく。</h2>
-        <p class="spirit__lead">勝負の前の円陣。9人の気持ちがそろう、いちばん熱い瞬間です。</p>
+    <!-- Spirit（円陣・全体表示） -->
+    <section class="section spirit" id="spirit">
+      <div class="spirit__grid">
+        <div class="spirit__text reveal">
+          <p class="section__tag">TEAM SPIRIT</p>
+          <h2 class="spirit__quote">ひとつになって、<br />勝ちにいく。</h2>
+          <p class="spirit__lead">勝負の前の円陣。9人の気持ちがそろう、いちばん熱い瞬間です。</p>
+        </div>
+        <figure class="spirit__photo reveal">
+          <img src="images/photo2.jpeg" alt="試合前の円陣" loading="lazy" />
+        </figure>
       </div>
     </section>
 
-    <!-- Gallery（写真ギャラリー） -->
+    <!-- Gallery（写真ギャラリー・全体表示のマソンリー） -->
     <section class="section gallery" id="gallery">
       <div class="section__head reveal">
         <p class="section__tag">GALLERY</p>
@@ -162,22 +170,55 @@
         <p class="section__desc">活動の様子をすこしだけ。</p>
       </div>
       <div class="gallery-grid">
-        <figure class="gallery__item gallery__item--wide reveal">
+        <figure class="gallery__item reveal">
           <img src="images/photo5.jpeg" alt="お揃いのチームTシャツで肩を組む raise の9人" loading="lazy" />
           <figcaption>チームTシャツでONE TEAM</figcaption>
-        </figure>
-        <figure class="gallery__item gallery__item--tall reveal">
-          <img src="images/photo2.jpeg" alt="試合前の円陣" loading="lazy" />
-          <figcaption>勝負前の円陣</figcaption>
         </figure>
         <figure class="gallery__item reveal">
           <img src="images/photo3.jpeg" alt="優勝メダルと賞状を手にするメンバー" loading="lazy" />
           <figcaption>優勝のよろこび</figcaption>
         </figure>
         <figure class="gallery__item reveal">
+          <img src="images/photo2.jpeg" alt="試合前の円陣" loading="lazy" />
+          <figcaption>勝負前の円陣</figcaption>
+        </figure>
+        <figure class="gallery__item reveal">
           <img src="images/photo1.jpeg" alt="優勝の賞状とメダル" loading="lazy" />
           <figcaption>勝ち取った賞状</figcaption>
         </figure>
+      </div>
+    </section>
+
+    <!-- Availability（空き状況カレンダー） -->
+    <section class="section calendar" id="availability">
+      <div class="section__head reveal">
+        <p class="section__tag">AVAILABILITY</p>
+        <h2 class="section__title">体育館の空き状況</h2>
+        <p class="section__desc">あじさいネット（神戸市 施設予約）の情報をもとに表示しています。</p>
+      </div>
+      <div class="cal reveal" id="cal">
+        <div class="cal__bar">
+          <div class="cal__gyms" id="calGyms" role="tablist" aria-label="体育館の選択"></div>
+          <div class="cal__nav">
+            <button type="button" id="calPrev" class="cal__navbtn" aria-label="前の月">‹</button>
+            <span id="calMonth" class="cal__month">—</span>
+            <button type="button" id="calNext" class="cal__navbtn" aria-label="次の月">›</button>
+          </div>
+        </div>
+        <div class="cal__legend">
+          <span><i class="dot dot--ok"></i>空きあり</span>
+          <span><i class="dot dot--few"></i>残りわずか</span>
+          <span><i class="dot dot--full"></i>満</span>
+          <span><i class="dot dot--none"></i>情報なし</span>
+        </div>
+        <div class="cal__weekdays">
+          <span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span>
+        </div>
+        <div class="cal__grid" id="calGrid"></div>
+        <p class="cal__meta">
+          最終更新: <span id="calUpdated">—</span>
+          <a id="calSource" class="cal__source" href="https://shisetsu-yoyaku.jp/ajisai/yoyaku/ShisetsuMultiSelect.cgi" target="_blank" rel="noopener">公式サイトで予約する ↗</a>
+        </p>
       </div>
     </section>
 
@@ -194,7 +235,7 @@
           <div class="timeline__body">
             <h3>平日ナイター練習</h3>
             <p class="timeline__time">19:00 – 21:00</p>
-            <p>○○体育館 / 基礎打ち・ゲーム練習</p>
+            <p>基礎打ち・ゲーム練習</p>
           </div>
         </div>
         <div class="timeline__item reveal">
@@ -202,7 +243,7 @@
           <div class="timeline__body">
             <h3>週末じっくり練習</h3>
             <p class="timeline__time">13:00 – 17:00</p>
-            <p>○○スポーツセンター / フットワーク・パターン練習・試合形式</p>
+            <p>フットワーク・パターン練習・試合形式</p>
           </div>
         </div>
         <div class="timeline__item reveal">
