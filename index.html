@@ -50,7 +50,7 @@
         <a href="#gallery">Gallery</a>
         <a href="#movie">動画</a>
         <a href="#availability">空き状況</a>
-        <a href="#join">Join</a>
+        <a href="#join">Members</a>
       </nav>
       <button class="nav-toggle" id="navToggle" aria-label="メニュー" aria-expanded="false">
         <span></span><span></span><span></span>
@@ -66,7 +66,7 @@
           <p class="hero__sub">高みへ、もっと上へ。</p>
           <p class="hero__lead"><span class="nowrap">年齢も経験も関係ない。</span><span class="nowrap">「うまくなりたい」という気持ちひとつで集まった、</span><span class="nowrap">本気のバドミントンチームです。</span></p>
           <div class="hero__actions">
-            <a href="#join" class="btn btn--primary">仲間になる</a>
+            <a href="#availability" class="btn btn--primary">空き状況をみる</a>
             <a href="#about" class="btn btn--ghost">チームを知る</a>
           </div>
         </div>
@@ -106,7 +106,7 @@
           <div class="feature__icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 8.3 9.5h7.4L12 2.5Z"/><path d="M8.3 9.5c-1.4 4 .1 8.6 3.7 11.9 3.6-3.3 5.1-7.9 3.7-11.9"/><path d="M10 4.6 9.2 14M14 4.6l.8 9.4M12 2.5V15"/></svg>
           </div>
-          <h3>実戦中心の練習</h3>
+          <h3>練習が中心</h3>
           <p>基礎打ち30分→練習1時間→試合30分。みんな同じメニューで、たくさん打ちます。</p>
         </article>
         <article class="feature reveal">
@@ -190,7 +190,7 @@
       <div class="section__head reveal">
         <p class="section__tag">MOVIE</p>
         <h2 class="section__title">練習動画</h2>
-        <p class="section__desc">顔なしの参考動画は誰でも、顔出しの限定動画はパスワードを入れた人だけが見られます。</p>
+        <p class="section__desc">参考動画は誰でも、限定動画はパスワードを入れた人だけが見られます。</p>
       </div>
 
       <h3 class="movie__subhead">参考動画</h3>
@@ -201,7 +201,7 @@
           <span class="vault__lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10" width="15" height="10.5" rx="2.4"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15" r="1.4"/><path d="M12 16.4v1.8"/></svg></span>
           <div>
             <strong>限定動画（メンバー限定）</strong>
-            <p>顔出しありの動画です。AES-256で暗号化されています。パスワードを入力してください。</p>
+            <p>メンバー限定の動画です。パスワードを入力してください。</p>
           </div>
         </div>
         <form class="vault__form" id="vaultForm" autocomplete="off">
@@ -218,7 +218,7 @@
       <div class="section__head reveal">
         <p class="section__tag">AVAILABILITY</p>
         <h2 class="section__title">体育館の空き状況</h2>
-        <p class="section__desc">あじさいネット（神戸市 施設予約）の情報をもとに、<strong>15分ごとに自動更新</strong>しています。</p>
+        <p class="section__desc">あじさいネット（神戸市 施設予約）の情報をもとに、自動で取得しています。</p>
       </div>
       <div class="cal reveal" id="cal">
         <div class="cal__bar">
@@ -247,7 +247,6 @@
         <div class="cal__detail" id="calDetail"></div>
         <p class="cal__meta">
           <span class="cal__updated"><svg class="ico-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.2 2"/></svg> 最終更新: <span id="calUpdated">—</span></span>
-          <span class="cal__interval">15分ごとに自動更新</span>
           <a id="calSource" class="cal__source" href="https://shisetsu-yoyaku.jp/ajisai/yoyaku/ShisetsuMultiSelect.cgi" target="_blank" rel="noopener">公式サイトで予約する ↗</a>
         </p>
       </div>
@@ -258,7 +257,7 @@
       <div class="section__head reveal">
         <p class="section__tag">SCHEDULE</p>
         <h2 class="section__title">活動スケジュール</h2>
-        <p class="section__desc">基本の活動日です。見学はいつでも歓迎！</p>
+        <p class="section__desc">基本の活動の流れです。</p>
       </div>
       <div class="timeline">
         <div class="timeline__item reveal">
@@ -270,11 +269,11 @@
           </div>
         </div>
         <div class="timeline__item reveal">
-          <div class="timeline__day">試合</div>
+          <div class="timeline__day">練習</div>
           <div class="timeline__body">
-            <h3>試合中心</h3>
+            <h3>練習中心</h3>
             <p class="timeline__time">毎回</p>
-            <p>練習の締めはゲーム形式。実戦をたくさんこなして力をつけます。</p>
+            <p>基礎打ちと反復練習にじっくり。最後に少しだけ試合形式で締めます。</p>
           </div>
         </div>
         <div class="timeline__item reveal">
@@ -291,17 +290,15 @@
     <!-- Join -->
     <section class="section join" id="join">
       <div class="join__card reveal">
-        <p class="section__tag">JOIN US</p>
-        <h2 class="join__title">一緒に高みを目指そう。</h2>
+        <p class="section__tag">MEMBERS</p>
+        <h2 class="join__title">次のシーズンも、高みへ。</h2>
         <p class="join__lead">
-          経験者も、ラケットを久しぶりに握る人も大歓迎。<br />
-          まずは気軽に見学からどうぞ。
+          連絡はチームのLINEで。<br />
+          次も、みんなで全力で勝ちにいこう。
         </p>
         <div class="join__actions">
-          <a href="mailto:raise.badminton@example.com" class="btn btn--primary">見学を申し込む</a>
-          <a href="#top" class="btn btn--ghost">トップへ戻る</a>
+          <a href="#top" class="btn btn--primary">トップへ戻る</a>
         </div>
-        <p class="join__note">※ 連絡先メールは仮です。後で本物に差し替えてください。</p>
       </div>
     </section>
 

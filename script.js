@@ -215,7 +215,7 @@ function initVideos() {
         const vids = (json.videos || []).filter((v) => youTubeId(v.url));
         if (!vids.length) {
           grid.innerHTML =
-            '<p class="video__empty">参考動画は準備中です。<br />顔なしの動画リンクを登録すると、ここに表示されます。</p>';
+            '<p class="video__empty">参考動画は準備中です。<br />動画リンクを登録すると、ここに表示されます。</p>';
           return;
         }
         renderVideos(grid, vids);

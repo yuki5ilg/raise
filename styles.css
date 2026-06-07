@@ -839,7 +839,7 @@ img { max-width: 100%; display: block; }
   align-items: center;
 }
 .cal__updated { font-weight: 700; color: var(--text); }
-.cal__interval {
+.cal__source {
   font-size: 11px;
   font-weight: 700;
   color: var(--brand);
@@ -848,7 +848,6 @@ img { max-width: 100%; display: block; }
   border-radius: 999px;
   padding: 3px 10px;
 }
-.cal__source { color: var(--brand); font-weight: 700; }
 .cal__empty { text-align: center; color: var(--muted); padding: 30px 0; }
 .cal__detail:not(:empty) {
   margin-top: 16px;
