@@ -209,8 +209,10 @@ def main():
             break
         time.sleep(3 * (attempt + 1))
     else:
-        print("ERROR: 空き状況ページに到達できませんでした（リトライ上限）", file=sys.stderr)
-        sys.exit(1)
+        # サイトが応答しない時間帯（深夜メンテ等）は「失敗」ではなく更新スキップ扱いにし、
+        # 既存データを保持する（赤い失敗通知で埋まらないように）。
+        print("NOTICE: 空き状況ページに到達できませんでした。今回は更新をスキップします（サイト停止中の可能性）。")
+        return
 
     # 施設名 -> {date: {slot: raw status}}
     merged = {g: {} for g in TARGETS}
