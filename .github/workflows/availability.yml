@@ -3,7 +3,7 @@ name: Update gym availability
 # 体育館の空き状況を定期取得して data/availability.json を更新・コミットする。
 on:
   schedule:
-    - cron: "0,30 * * * *"   # 毎時0分・30分（30分ごと）※GitHub cronはベストエフォートで遅延あり
+    - cron: "8,23,38,53 * * * *"   # 15分ごと（混雑する0/30分を避けた分）。スキップされても次がすぐ来る
   workflow_dispatch:        # 手動実行も可
   push:                     # スクレイパー/ワークフロー変更時に即検証実行
     branches: [main]
