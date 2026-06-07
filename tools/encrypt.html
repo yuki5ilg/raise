@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>raise｜限定動画 暗号化ツール（オフライン）</title>
+<style>
+  body { font-family: system-ui, "Noto Sans JP", sans-serif; background: #f5ecdc; color: #322b22; margin: 0; padding: 28px; line-height: 1.7; }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 22px; }
+  .card { background: #fffdf8; border: 1px solid rgba(60,45,25,.14); border-radius: 14px; padding: 22px; margin-top: 18px; box-shadow: 0 10px 30px rgba(80,55,25,.08); }
+  label { font-weight: 700; font-size: 14px; display: block; margin-bottom: 6px; }
+  textarea, input { width: 100%; box-sizing: border-box; font-family: ui-monospace, monospace; font-size: 14px; padding: 12px; border: 1px solid rgba(60,45,25,.2); border-radius: 10px; background: #fff; }
+  textarea { min-height: 150px; resize: vertical; }
+  button { margin-top: 14px; background: linear-gradient(120deg,#c2622e,#d99a4e); color: #fff; border: none; border-radius: 999px; padding: 12px 28px; font-weight: 700; font-size: 15px; cursor: pointer; }
+  .out { margin-top: 14px; }
+  .note { font-size: 13px; color: #87796a; }
+  code { background: #efe4d1; padding: 1px 6px; border-radius: 4px; }
+  .ok { color: #3f9b6b; font-weight: 700; }
+  .err { color: #c0563f; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🔒 限定動画 暗号化ツール</h1>
+  <p class="note">
+    このページは<strong>完全にオフラインで動作</strong>します（通信しません）。パスワードと動画リンクは
+    あなたのブラウザの中だけで処理され、外部にもサイト本体にも送信されません。<br />
+    生成された暗号文を <code>data/private.enc</code> として保存・コミットしてください。
+  </p>
+
+  <div class="card">
+    <label for="json">① 動画リスト（JSON）</label>
+    <textarea id="json">{
+  "videos": [
+    { "title": "練習の様子①", "url": "https://youtu.be/xxxxxxxxxxx" },
+    { "title": "試合ハイライト", "url": "https://www.youtube.com/watch?v=yyyyyyyyyyy" }
+  ]
+}</textarea>
+    <p class="note">url は通常の共有リンクでOK（youtu.be / watch?v= / shorts いずれも可）。</p>
+
+    <label for="pass" style="margin-top:16px;">② パスワード（強いものを。これがそのまま安全性になります）</label>
+    <input id="pass" type="text" placeholder="例: raise-2026-himitsu!" />
+
+    <button id="go">暗号化する</button>
+    <div class="out">
+      <p id="status"></p>
+      <label for="result" id="resultLabel" style="display:none;">③ これを <code>data/private.enc</code> に貼り付けて保存</label>
+      <textarea id="result" style="display:none;" readonly></textarea>
+      <button id="copy" style="display:none;">コピー</button>
+    </div>
+  </div>
+
+  <p class="note" style="margin-top:18px;">
+    ※ 復号は同じパスワードを知っている人だけが可能です。パスワードを忘れると復元できません（安全のため、どこにも保存されません）。<br />
+    ※ パラメータ: PBKDF2-SHA256（200,000回）＋AES-256-GCM。サイト側 <code>script.js</code> の復号処理と一致しています。
+  </p>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+async function encrypt(plaintext, password) {
+  const enc = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const km = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
+  const key = await crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt, iterations: 200000, hash: "SHA-256" },
+    km, { name: "AES-GCM", length: 256 }, false, ["encrypt"]
+  );
+  const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(plaintext));
+  const blob = new Uint8Array([...salt, ...iv, ...new Uint8Array(ct)]);
+  let s = "";
+  blob.forEach((b) => (s += String.fromCharCode(b)));
+  return btoa(s);
+}
+$("go").addEventListener("click", async () => {
+  const status = $("status");
+  try {
+    const obj = JSON.parse($("json").value);   // JSON妥当性チェック
+    const pass = $("pass").value;
+    if (!pass) { status.innerHTML = '<span class="err">パスワードを入力してください。</span>'; return; }
+    const b64 = await encrypt(JSON.stringify(obj), pass);
+    $("result").value = b64;
+    $("result").style.display = "block";
+    $("resultLabel").style.display = "block";
+    $("copy").style.display = "inline-block";
+    status.innerHTML = '<span class="ok">暗号化しました。下のテキストを data/private.enc に保存してください。</span>';
+  } catch (e) {
+    status.innerHTML = '<span class="err">JSONの形式が正しくありません: ' + e.message + '</span>';
+  }
+});
+$("copy").addEventListener("click", () => {
+  $("result").select();
+  document.execCommand("copy");
+});
+</script>
+</body>
+</html>

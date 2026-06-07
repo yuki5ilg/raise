@@ -190,14 +190,32 @@
       </div>
     </section>
 
-    <!-- Movie（限定公開動画） -->
+    <!-- Movie（参考動画 + 暗号化された限定動画） -->
     <section class="section movie" id="movie">
       <div class="section__head reveal">
         <p class="section__tag">MOVIE</p>
         <h2 class="section__title">練習動画</h2>
-        <p class="section__desc">限定公開動画です。このページを見られる人だけが視聴できます。</p>
+        <p class="section__desc">顔なしの参考動画は誰でも、顔出しの限定動画はパスワードを入れた人だけが見られます。</p>
       </div>
+
+      <h3 class="movie__subhead">参考動画</h3>
       <div class="video-grid" id="videoGrid"></div>
+
+      <div class="vault reveal" id="vault">
+        <div class="vault__head">
+          <span class="vault__lock">🔒</span>
+          <div>
+            <strong>限定動画（メンバー限定）</strong>
+            <p>顔出しありの動画です。AES-256で暗号化されています。パスワードを入力してください。</p>
+          </div>
+        </div>
+        <form class="vault__form" id="vaultForm" autocomplete="off">
+          <input type="password" id="vaultPass" placeholder="動画用パスワード" aria-label="動画用パスワード" autocomplete="off" />
+          <button type="submit" class="btn btn--primary">開く</button>
+        </form>
+        <p class="vault__msg" id="vaultMsg" role="status"></p>
+        <div class="video-grid" id="vaultGrid"></div>
+      </div>
     </section>
 
     <!-- Availability（空き状況カレンダー） -->

@@ -135,55 +135,120 @@ function initSite() {
 }
 
 // ===== 限定公開YouTube動画 =====
-// data/videos.json の url からYouTube動画IDを取り出して埋め込み表示する。
-// 限定公開動画は「リンクを知っている人だけ」が見られる仕組みのため、
-// 自動収集はできない。url を手動で登録する運用。
+// 参考動画(顔なし)は data/videos.json から表示。
+// 限定動画(顔出し)は data/private.enc に AES-256-GCM で暗号化して保存し、
+// 正しいパスワードを入れたときだけブラウザ内で復号して表示する。
+// パスワードはどこにも保存しないため、公開リポジトリでも中身は守られる。
+function youTubeId(url) {
+  const m = String(url).match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/);
+  return m ? m[1] : null;
+}
+
+function renderVideos(grid, list) {
+  grid.innerHTML = "";
+  (list || [])
+    .map((v) => ({ title: v.title || "", id: youTubeId(v.url) }))
+    .filter((v) => v.id)
+    .forEach((v) => {
+      const fig = document.createElement("figure");
+      fig.className = "video__item";
+      const frame = document.createElement("div");
+      frame.className = "video__frame";
+      const iframe = document.createElement("iframe");
+      iframe.src = `https://www.youtube-nocookie.com/embed/${v.id}`;
+      iframe.title = v.title || "raise video";
+      iframe.loading = "lazy";
+      iframe.allow =
+        "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+      iframe.allowFullscreen = true;
+      frame.appendChild(iframe);
+      fig.appendChild(frame);
+      if (v.title) {
+        const cap = document.createElement("figcaption");
+        cap.textContent = v.title;
+        fig.appendChild(cap);
+      }
+      grid.appendChild(fig);
+    });
+}
+
 function initVideos() {
   const grid = document.getElementById("videoGrid");
-  if (!grid) return;
-
-  const videoId = (url) => {
-    const m = String(url).match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/);
-    return m ? m[1] : null;
-  };
-
-  fetch("data/videos.json", { cache: "no-store" })
-    .then((res) => (res.ok ? res.json() : { videos: [] }))
-    .then((json) => {
-      const vids = (json.videos || [])
-        .map((v) => ({ title: v.title || "", id: videoId(v.url) }))
-        .filter((v) => v.id);
-      if (!vids.length) {
-        grid.innerHTML =
-          '<p class="video__empty">動画は準備中です。<br />YouTubeの限定公開リンクを登録すると、ここに表示されます。</p>';
-        return;
-      }
-      grid.innerHTML = "";
-      vids.forEach((v) => {
-        const fig = document.createElement("figure");
-        fig.className = "video__item";
-        const frame = document.createElement("div");
-        frame.className = "video__frame";
-        const iframe = document.createElement("iframe");
-        iframe.src = `https://www.youtube-nocookie.com/embed/${v.id}`;
-        iframe.title = v.title || "raise practice video";
-        iframe.loading = "lazy";
-        iframe.allow =
-          "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
-        iframe.allowFullscreen = true;
-        frame.appendChild(iframe);
-        fig.appendChild(frame);
-        if (v.title) {
-          const cap = document.createElement("figcaption");
-          cap.textContent = v.title;
-          fig.appendChild(cap);
+  if (grid) {
+    fetch("data/videos.json", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : { videos: [] }))
+      .then((json) => {
+        const vids = (json.videos || []).filter((v) => youTubeId(v.url));
+        if (!vids.length) {
+          grid.innerHTML =
+            '<p class="video__empty">参考動画は準備中です。<br />顔なしの動画リンクを登録すると、ここに表示されます。</p>';
+          return;
         }
-        grid.appendChild(fig);
+        renderVideos(grid, vids);
+      })
+      .catch(() => {
+        grid.innerHTML = '<p class="video__empty">動画を読み込めませんでした。</p>';
       });
-    })
-    .catch(() => {
-      grid.innerHTML = '<p class="video__empty">動画を読み込めませんでした。</p>';
-    });
+  }
+  initVault();
+}
+
+// ===== 限定動画の復号（AES-256-GCM / PBKDF2-SHA256） =====
+// data/private.enc は base64( salt[16] | iv[12] | ciphertext )。
+// 平文は { "videos": [ {title,url}, ... ] } のJSON。
+async function decryptVault(password, b64) {
+  const raw = Uint8Array.from(atob(b64.replace(/\s+/g, "")), (c) => c.charCodeAt(0));
+  const salt = raw.slice(0, 16);
+  const iv = raw.slice(16, 28);
+  const data = raw.slice(28);
+  const km = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]
+  );
+  const key = await crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt, iterations: 200000, hash: "SHA-256" },
+    km, { name: "AES-GCM", length: 256 }, false, ["decrypt"]
+  );
+  const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, data);
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+
+function initVault() {
+  const form = document.getElementById("vaultForm");
+  if (!form) return;
+  const passEl = document.getElementById("vaultPass");
+  const msgEl = document.getElementById("vaultMsg");
+  const grid = document.getElementById("vaultGrid");
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const password = passEl.value;
+    if (!password) return;
+    msgEl.textContent = "復号しています…";
+    fetch("data/private.enc", { cache: "no-store" })
+      .then((res) => {
+        if (!res.ok) throw new Error("nofile");
+        return res.text();
+      })
+      .then((b64) => decryptVault(password, b64))
+      .then((json) => {
+        const vids = (json.videos || []).filter((v) => youTubeId(v.url));
+        msgEl.textContent = "";
+        passEl.value = "";
+        form.style.display = "none";
+        if (!vids.length) {
+          msgEl.textContent = "登録されている限定動画はありません。";
+          return;
+        }
+        renderVideos(grid, vids);
+      })
+      .catch((err) => {
+        if (err && err.message === "nofile") {
+          msgEl.textContent = "限定動画はまだ登録されていません。";
+        } else {
+          msgEl.textContent = "パスワードが違います。";
+        }
+      });
+  });
 }
 
 // ===== 空き状況カレンダー =====
