@@ -143,15 +143,16 @@ img { max-width: 100%; display: block; }
   padding-top: 12px;
   padding-bottom: 12px;
 }
+/* ヘッダーのロゴ：フッターの画像(白抜き)をマスクにして、ブランド色で表示 */
 .brand {
-  font-size: 26px;
-  font-weight: 900;
-  letter-spacing: -0.03em;
+  display: block;
+  width: 116px;
+  height: 42px;
   background: var(--grad);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  -webkit-mask: url("images/raise-logo.png") left center / contain no-repeat;
+  mask: url("images/raise-logo.png") left center / contain no-repeat;
 }
+@media (max-width: 480px) { .brand { width: 100px; height: 36px; } }
 .nav { display: flex; gap: 28px; }
 .nav a {
   font-size: 14px;
@@ -413,14 +414,19 @@ img { max-width: 100%; display: block; }
 }
 .feature:hover { transform: translateY(-6px); box-shadow: var(--shadow); }
 .feature__icon {
-  font-size: 32px;
   width: 64px; height: 64px;
   display: grid;
   place-items: center;
   border-radius: 16px;
   background: linear-gradient(135deg, rgba(217, 154, 78, 0.2), rgba(194, 98, 46, 0.14));
   margin-bottom: 18px;
+  color: var(--brand);
 }
+.feature__icon svg { width: 32px; height: 32px; }
+
+/* テキスト中に置く小さなアイコン */
+.ico-inline { width: 1.05em; height: 1.05em; vertical-align: -0.18em; }
+.ico-inline--brand { color: var(--brand); }
 .feature h3 { font-size: 19px; margin-bottom: 10px; }
 .feature p { color: var(--muted); font-size: 14.5px; }
 
@@ -650,7 +656,8 @@ img { max-width: 100%; display: block; }
   padding: clamp(20px, 4vw, 30px);
 }
 .vault__head { display: flex; gap: 14px; align-items: flex-start; }
-.vault__lock { font-size: 26px; line-height: 1.2; }
+.vault__lock { color: var(--brand); line-height: 1; }
+.vault__lock svg { width: 28px; height: 28px; }
 .vault__head strong { font-size: 17px; }
 .vault__head p { color: var(--muted); font-size: 13.5px; margin-top: 4px; }
 .vault__form {
@@ -695,8 +702,18 @@ img { max-width: 100%; display: block; }
   flex-wrap: wrap;
   margin-bottom: 16px;
 }
-.cal__gyms { display: flex; gap: 8px; flex-wrap: wrap; }
+.cal__gyms {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.cal__gyms::-webkit-scrollbar { display: none; }
 .cal__gym {
+  flex: 0 0 auto;
+  white-space: nowrap;
   border: 1px solid var(--line);
   background: var(--bg-soft);
   color: var(--muted);
@@ -860,6 +877,27 @@ img { max-width: 100%; display: block; }
 .cal__slotrow--closed { color: var(--muted); }
 .cal__slotrow--closed .mark { color: #8a7f86; }
 .cal__slotrow--none .mark { color: #b6a98f; }
+/* 詳細：空いてる体育館のカードを横スライド表示 */
+.cal__cardhint { font-size: 11px; color: var(--muted); text-align: center; margin-bottom: 8px; }
+.cal__cards {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+.cal__card {
+  flex: 0 0 min(82%, 290px);
+  scroll-snap-align: start;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.cal__card--single { flex-basis: 100%; }
+.cal__cardname { font-weight: 800; font-size: 15px; margin-bottom: 10px; color: var(--brand); }
 @media (max-width: 480px) {
   .cal__cell { font-size: 12px; border-radius: 8px; }
   .cal__month { font-size: 15px; min-width: 96px; }

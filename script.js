@@ -305,7 +305,7 @@ function initCalendar() {
   const LABEL = { ok: "空き", full: "予約済み", closed: "休館", none: "情報なし" };
   const today = new Date();
   let data = null;
-  let activeGym = 0;
+  let activeGym = "all"; // "all" または gyms のインデックス
   let activeSlot = null;
   let selectedDate = null;
   let view = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -344,20 +344,24 @@ function initCalendar() {
 
   function renderGyms() {
     gymsEl.innerHTML = "";
-    (data.gyms || []).forEach((gym, i) => {
+    const mk = (label, val) => {
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "cal__gym" + (i === activeGym ? " is-active" : "");
-      btn.textContent = gym.name;
+      btn.className = "cal__gym" + (val === activeGym ? " is-active" : "");
+      btn.textContent = label;
       btn.setAttribute("role", "tab");
       btn.addEventListener("click", () => {
-        activeGym = i;
+        activeGym = val;
         selectedDate = null;
+        if (detailEl) detailEl.innerHTML = "";
         renderGyms();
         renderMonth();
       });
       gymsEl.appendChild(btn);
-    });
+    };
+    // 先頭に「すべて」（既定）、続いて各体育館（「体育館」の文字は省く）
+    mk("すべて", "all");
+    (data.gyms || []).forEach((gym, i) => mk(gym.name.replace("体育館", ""), i));
   }
 
   function renderSlots() {
@@ -377,11 +381,21 @@ function initCalendar() {
     });
   }
 
-  function statusFor(dateStr) {
-    const gym = (data.gyms || [])[activeGym];
+  function gymStatusAt(gym, dateStr) {
     const day = gym && gym.dates && gym.dates[dateStr];
     if (!day) return "none";
     return day[activeSlot] || "none";
+  }
+  function statusFor(dateStr) {
+    // 「すべて」のときは、いずれかの体育館が空いていれば ○ にする
+    if (activeGym === "all") {
+      const sts = (data.gyms || []).map((g) => gymStatusAt(g, dateStr));
+      if (sts.includes("ok")) return "ok";
+      if (sts.includes("full")) return "full";
+      if (sts.includes("closed")) return "closed";
+      return "none";
+    }
+    return gymStatusAt((data.gyms || [])[activeGym], dateStr);
   }
 
   function renderMonth() {
@@ -425,22 +439,42 @@ function initCalendar() {
     if (selectedDate) renderDetail(selectedDate);
   }
 
+  function slotListHtml(day) {
+    let html = '<ul class="cal__slotlist">';
+    (data.slots || []).forEach((slot) => {
+      const st = (day && day[slot]) || "none";
+      html += `<li class="cal__slotrow cal__slotrow--${st}"><span>${slot}</span><span class="mark">${MARK[st] || "–"} ${LABEL[st]}</span></li>`;
+    });
+    return html + "</ul>";
+  }
+  function cardHtml(gym, dateStr, single) {
+    const day = (gym && gym.dates && gym.dates[dateStr]) || null;
+    return `<div class="cal__card${single ? " cal__card--single" : ""}">`
+      + `<div class="cal__cardname">${gym.name}</div>${slotListHtml(day)}</div>`;
+  }
+  function hasOk(gym, dateStr) {
+    const day = gym && gym.dates && gym.dates[dateStr];
+    return !!day && Object.values(day).includes("ok");
+  }
   function renderDetail(dateStr) {
     if (!detailEl) return;
-    const gym = (data.gyms || [])[activeGym];
-    const day = (gym && gym.dates && gym.dates[dateStr]) || null;
     const dt = new Date(dateStr + "T00:00:00");
     const wd = "日月火水木金土"[dt.getDay()];
-    let html = `<div class="cal__detailhead">${dt.getMonth() + 1}月${dt.getDate()}日（${wd}）・${gym ? gym.name : ""}</div>`;
-    if (!day) {
-      html += `<p class="cal__empty">この日の情報はありません。</p>`;
+    let html = `<div class="cal__detailhead">${dt.getMonth() + 1}月${dt.getDate()}日（${wd}）</div>`;
+    if (activeGym === "all") {
+      // 空きのある体育館を、磯上→須磨→垂水→東灘（=配列順=優先度）で
+      const avail = (data.gyms || []).filter((g) => hasOk(g, dateStr));
+      if (!avail.length) {
+        html += `<p class="cal__empty">この日に空きのある体育館はありません。</p>`;
+      } else {
+        if (avail.length > 1) html += `<p class="cal__cardhint">← 横にスライドで他の体育館 →</p>`;
+        html += '<div class="cal__cards">' + avail.map((g) => cardHtml(g, dateStr, false)).join("") + "</div>";
+      }
     } else {
-      html += '<ul class="cal__slotlist">';
-      (data.slots || []).forEach((slot) => {
-        const st = day[slot] || "none";
-        html += `<li class="cal__slotrow cal__slotrow--${st}"><span>${slot}</span><span class="mark">${MARK[st] || "–"} ${LABEL[st]}</span></li>`;
-      });
-      html += "</ul>";
+      const gym = (data.gyms || [])[activeGym];
+      html += '<div class="cal__cards">'
+        + (gym ? cardHtml(gym, dateStr, true) : `<p class="cal__empty">情報がありません。</p>`)
+        + "</div>";
     }
     detailEl.innerHTML = html;
   }
