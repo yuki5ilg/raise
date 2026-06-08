@@ -567,8 +567,9 @@ img { max-width: 100%; display: block; }
 .gallery-grid {
   column-count: 2;
   column-gap: 16px;
+  max-width: 680px;
+  margin: 0 auto;
 }
-@media (min-width: 760px) { .gallery-grid { column-count: 3; } }
 .gallery__item {
   position: relative;
   margin: 0 0 16px;
