@@ -186,17 +186,17 @@
       <!-- ライトボックス（拡大表示＋保存） -->
       <div class="lightbox" id="lightbox" aria-hidden="true" role="dialog" aria-label="写真の拡大表示">
         <button class="lightbox__btn lightbox__close" id="lbClose" type="button" aria-label="閉じる">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6 18 18M18 6 6 18"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6 18 18M18 6 6 18"/></svg>
         </button>
         <button class="lightbox__btn lightbox__nav lightbox__prev" id="lbPrev" type="button" aria-label="前の写真">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg>
         </button>
         <img class="lightbox__img" id="lbImg" src="" alt="" />
         <button class="lightbox__btn lightbox__nav lightbox__next" id="lbNext" type="button" aria-label="次の写真">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5 16 12l-7 7"/></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5 16 12l-7 7"/></svg>
         </button>
         <a class="lightbox__btn lightbox__save" id="lbSave" download href="#">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M8 11l4 4 4-4M5 19h14"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M8 11l4 4 4-4M5 19h14"/></svg>
           <span>保存</span>
         </a>
       </div>
@@ -330,6 +330,20 @@
     </section>
 
     <!-- Footer（ロゴ） -->
+    <!-- これからやること（Next Action / 開発メモ） -->
+    <section class="section roadmap" id="roadmap">
+      <div class="section__head reveal">
+        <p class="section__tag">NEXT ACTION</p>
+        <h2 class="section__title">これからやること</h2>
+        <p class="section__desc">このサイトに少しずつ足していきたい機能のメモ。</p>
+      </div>
+      <ul class="roadmap__list reveal">
+        <li>動画を追加していく（非公開動画はアップ時にタイトルを共有）</li>
+        <li>写真をギャラリーに追加していく</li>
+        <li>体育館の予約を毎晩0時に自動化（予約サイトのログイン方法・予約手順を確認して設計）</li>
+      </ul>
+    </section>
+
     <footer class="footer">
       <img class="footer__logo" src="images/photo4.jpeg" alt="raise ロゴ" loading="lazy" />
       <p class="footer__copy">© <span id="year"></span> raise Badminton Team. All rights reserved.</p>

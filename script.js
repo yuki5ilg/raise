@@ -211,6 +211,24 @@ function initGallery() {
   document.getElementById("lbClose").addEventListener("click", close);
   document.getElementById("lbPrev").addEventListener("click", () => show(index - 1));
   document.getElementById("lbNext").addEventListener("click", () => show(index + 1));
+  // 保存：href 既定動作（先頭スクロール）を止めて Blob でダウンロード
+  saveEl.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const src = imgs[index].currentSrc || imgs[index].src;
+    try {
+      const blob = await (await fetch(src)).blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName(src);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (_) {
+      window.open(src, "_blank", "noopener");
+    }
+  });
   // 背景クリックで閉じる（画像や操作ボタンは除く）
   lb.addEventListener("click", (e) => {
     if (e.target === lb) close();
