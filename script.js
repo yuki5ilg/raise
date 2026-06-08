@@ -181,22 +181,35 @@ function youTubeId(url) {
 function renderVideos(grid, list) {
   grid.innerHTML = "";
   (list || [])
-    .map((v) => ({ title: v.title || "", id: youTubeId(v.url) }))
+    .map((v) => ({ title: v.title || "", id: youTubeId(v.url), url: v.url, isPrivate: !!v.private }))
     .filter((v) => v.id)
     .forEach((v) => {
       const fig = document.createElement("figure");
       fig.className = "video__item";
-      const frame = document.createElement("div");
-      frame.className = "video__frame";
-      const iframe = document.createElement("iframe");
-      iframe.src = `https://www.youtube-nocookie.com/embed/${v.id}`;
-      iframe.title = v.title || "raise video";
-      iframe.loading = "lazy";
-      iframe.allow =
-        "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
-      iframe.allowFullscreen = true;
-      frame.appendChild(iframe);
-      fig.appendChild(frame);
+      if (v.isPrivate) {
+        // 非公開動画は埋め込み不可。YouTubeで開くリンクカードにする。
+        const link = document.createElement("a");
+        link.className = "video__frame video__frame--link";
+        link.href = v.url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.innerHTML =
+          '<span class="video__play" aria-hidden="true"></span>' +
+          '<span class="video__open">YouTubeで再生</span>';
+        fig.appendChild(link);
+      } else {
+        const frame = document.createElement("div");
+        frame.className = "video__frame";
+        const iframe = document.createElement("iframe");
+        iframe.src = `https://www.youtube-nocookie.com/embed/${v.id}`;
+        iframe.title = v.title || "raise video";
+        iframe.loading = "lazy";
+        iframe.allow =
+          "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+        iframe.allowFullscreen = true;
+        frame.appendChild(iframe);
+        fig.appendChild(frame);
+      }
       if (v.title) {
         const cap = document.createElement("figcaption");
         cap.textContent = v.title;

@@ -1,5 +1,7 @@
 {
-  "_note": "YouTubeの限定公開動画を表示します。url には通常の共有リンクを入れてください（youtu.be/... でも watch?v=... でもOK）。複数追加できます。",
+  "_note": "YouTube動画を表示します。url には共有リンクを入れてください（youtu.be/... でも watch?v=... でもOK）。限定公開はそのまま埋め込み再生されます。非公開動画は埋め込めないので \"private\": true を付けると「YouTubeで再生」リンクカードになります。title は省略可。",
   "videos": [
+    { "title": "練習の様子", "url": "https://youtu.be/bw8lZlT6ERU" },
+    { "title": "試合ハイライト（YouTubeで再生）", "url": "https://youtu.be/9x25xPJ0EHU", "private": true }
   ]
 }
