@@ -576,128 +576,22 @@ img { max-width: 100%; display: block; }
   border-radius: var(--radius);
   overflow: hidden;
   box-shadow: var(--shadow-soft);
-  cursor: zoom-in;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   /* タップ時のハイライトのチラつきを抑える */
   -webkit-tap-highlight-color: transparent;
 }
-.gallery__item:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
-/* 写真を切り取らず、そのままの縦横比で全体表示 */
+/* 写真は全体表示。長押しでそのまま端末に保存できるよう、callout/選択は無効化しない */
 .gallery__item img {
   width: 100%;
   height: auto;
   display: block;
   transition: transform 0.5s ease;
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
 }
-.gallery__item:hover img { transform: scale(1.06); }
-/* ホバー時に薄いグラデと拡大アイコンを重ねる */
-.gallery__item::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, transparent 55%, rgba(20, 14, 9, 0.5));
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: 1;
-}
-.gallery__item::after {
-  content: "";
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.92) center / 17px 17px no-repeat
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2622e' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 4H5a1 1 0 0 0-1 1v4M15 4h4a1 1 0 0 1 1 1v4M9 20H5a1 1 0 0 1-1-1v-4M15 20h4a1 1 0 0 0 1-1v-4'/%3E%3C/svg%3E");
-  opacity: 0;
-  transform: scale(0.8);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  z-index: 2;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-}
-/* ホバー演出はマウス端末だけ（タッチでアイコンが固着しないように） */
+/* ホバー演出はマウス端末だけ（タッチには干渉しない） */
 @media (hover: hover) {
-  .gallery__item:hover::before { opacity: 1; }
-  .gallery__item:hover::after { opacity: 1; transform: scale(1); }
+  .gallery__item:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+  .gallery__item:hover img { transform: scale(1.05); }
 }
-
-/* ===== ライトボックス（拡大表示＋保存） ===== */
-.lightbox {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(16px, 5vw, 56px);
-  background: rgba(18, 13, 9, 0.92);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.25s ease, visibility 0.25s ease;
-}
-.lightbox.is-open { opacity: 1; visibility: visible; }
-.lightbox__img {
-  max-width: 100%;
-  max-height: 100%;
-  border-radius: 12px;
-  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.6);
-  transform: scale(0.96);
-  transition: transform 0.25s ease;
-}
-.lightbox.is-open .lightbox__img { transform: scale(1); }
-.lightbox__btn {
-  position: absolute;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  border: 0;
-  cursor: pointer;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.14);
-  border-radius: 999px;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  transition: background 0.2s ease, transform 0.2s ease;
-  text-decoration: none;
-  font: inherit;
-}
-.lightbox__btn:hover { background: rgba(255, 255, 255, 0.28); }
-.lightbox__btn svg { width: 22px; height: 22px; flex: none; }
-.lightbox__save svg { width: 18px; height: 18px; }
-.lightbox__close { top: 16px; right: 16px; width: 44px; height: 44px; }
-.lightbox__nav {
-  top: 50%;
-  transform: translateY(-50%);
-  width: 48px;
-  height: 48px;
-}
-.lightbox__nav:hover { transform: translateY(-50%) scale(1.08); }
-.lightbox__prev { left: 16px; }
-.lightbox__next { right: 16px; }
-.lightbox__save {
-  left: 50%;
-  bottom: 22px;
-  transform: translateX(-50%);
-  padding: 11px 22px;
-  font-size: 14px;
-  font-weight: 700;
-  background: var(--brand);
-}
-.lightbox__save:hover { background: var(--brand); transform: translateX(-50%) translateY(-2px); }
-.lightbox__save svg { width: 18px; height: 18px; }
-@media (max-width: 540px) {
-  .lightbox__nav { width: 40px; height: 40px; }
-  .lightbox__prev { left: 8px; }
-  .lightbox__next { right: 8px; }
-}
-
 /* ===== Roadmap (Next Action / 開発メモ) ===== */
 .roadmap__list {
   max-width: 640px;
