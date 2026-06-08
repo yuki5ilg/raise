@@ -556,6 +556,7 @@ img { max-width: 100%; display: block; }
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   opacity: 0.6;
+  pointer-events: none;
 }
 .join__title { font-size: clamp(28px, 6vw, 44px); font-weight: 800; margin: 14px 0 16px; letter-spacing: -0.02em; }
 .join__lead { color: var(--muted); font-size: 16px; }
