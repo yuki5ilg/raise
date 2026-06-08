@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex" />
+<title>予約アタック準備 | raise</title>
+<style>
+  :root {
+    --bg: #faf6f0; --card: #fff; --line: #ece2d6; --text: #2b2018;
+    --muted: #8a7c6c; --brand: #c2622e; --go: #1f9d57;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.6;
+    padding: 22px 16px 60px; -webkit-tap-highlight-color: transparent;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 20px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    padding: 20px; margin-bottom: 16px; box-shadow: 0 6px 20px rgba(80,50,20,.05);
+  }
+  .clock {
+    text-align: center; font-variant-numeric: tabular-nums;
+    font-size: clamp(40px, 13vw, 64px); font-weight: 800; letter-spacing: 1px; line-height: 1.1;
+  }
+  .clock .ms { font-size: .4em; color: var(--muted); font-weight: 700; }
+  .clocklabel { text-align: center; color: var(--muted); font-size: 12px; margin-top: 6px; }
+  .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 999px; }
+  .badge--ntp { background: rgba(31,157,87,.12); color: var(--go); }
+  .badge--local { background: rgba(194,98,46,.12); color: var(--brand); }
+  .count {
+    text-align: center; font-variant-numeric: tabular-nums; font-weight: 800;
+    font-size: clamp(34px, 11vw, 52px); color: var(--brand); line-height: 1.1;
+  }
+  .count.soon { color: #d23b3b; animation: pulse .9s ease-in-out infinite; }
+  .count.go { color: #fff; }
+  @keyframes pulse { 50% { opacity: .45; } }
+  .card.gocard { background: var(--go); border-color: var(--go); transition: background .2s; }
+  .card.gocard .count, .card.gocard .clocklabel { color: #fff; }
+  .targetrow { display: flex; gap: 10px; align-items: center; justify-content: center; margin-top: 12px; }
+  .targetrow label { font-size: 13px; color: var(--muted); }
+  input[type="time"], textarea {
+    font-family: inherit; font-size: 16px; color: var(--text);
+    background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px;
+  }
+  .btn {
+    display: block; width: 100%; text-align: center; text-decoration: none;
+    background: var(--brand); color: #fff; font-weight: 800; font-size: 17px;
+    padding: 16px; border: 0; border-radius: 14px; cursor: pointer;
+    box-shadow: 0 8px 20px rgba(194,98,46,.28);
+  }
+  .btn:active { transform: translateY(1px); }
+  h2 { font-size: 15px; margin: 0 0 10px; }
+  textarea { width: 100%; min-height: 120px; resize: vertical; line-height: 1.7; }
+  ul.check { list-style: none; padding: 0; margin: 0; }
+  ul.check li { display: flex; gap: 10px; align-items: flex-start; padding: 7px 0; font-size: 14.5px; }
+  ul.check input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--brand); flex: none; }
+  .tips { color: var(--muted); font-size: 13px; }
+  .tips b { color: var(--text); }
+  .toggle { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 7px; justify-content: center; margin-top: 12px; }
+  .toggle input { width: 17px; height: 17px; accent-color: var(--brand); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>予約アタック準備</h1>
+  <p class="sub">0時の先着予約に間に合わせるための時計＆手順メモ。ログイン・reCAPTCHA・最終確定はあなたが手で操作します。</p>
+
+  <div class="card" id="clockCard">
+    <div class="clock" id="clock">--:--:--<span class="ms" id="ms">.000</span></div>
+    <div class="clocklabel">現在時刻（日本時間）　<span class="badge badge--local" id="srcBadge">同期中…</span></div>
+  </div>
+
+  <div class="card" id="countCard">
+    <div class="count" id="count">--:--:--</div>
+    <div class="clocklabel">目標時刻まで</div>
+    <div class="targetrow">
+      <label for="target">目標</label>
+      <input type="time" id="target" step="1" value="00:00:00" />
+    </div>
+    <label class="toggle"><input type="checkbox" id="beep" checked /> 残り10秒からカウント音を鳴らす</label>
+  </div>
+
+  <a class="btn" id="openBtn" href="https://shisetsu-yoyaku.jp/ajisai/menu/Menu.cgi" target="_blank" rel="noopener">予約サイトを開く ↗</a>
+  <p class="tips" style="text-align:center;margin:10px 0 18px;">※ 早めに開いてログイン＆reCAPTCHAを通し、目的画面の一歩手前で待機しておくのがコツ。</p>
+
+  <div class="card">
+    <h2>最短手順メモ</h2>
+    <textarea id="memo" placeholder="例）ログイン → 施設選択：◯◯体育館 → 日付：翌週◯曜 → 時間：19-21 → 確定ボタン位置… を一度実際にたどって書いておく"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>直前チェックリスト</h2>
+    <ul class="check" id="checklist"></ul>
+  </div>
+
+  <div class="card tips">
+    <h2 style="color:var(--text)">時間ズレ対策</h2>
+    <p>この時計は <b>worldtimeapi</b> で日本標準時に補正します（<span class="badge badge--ntp">NTP補正</span> 表示なら同期成功）。失敗時は端末時計を使うので、その場合は <b>OSの時刻を自動同期</b>にしておいてください（Windows/Mac/スマホとも標準でON）。</p>
+    <p>サーバー側の時計と完全一致はできないため、<b>0:00:00ぴったりではなく数百ミリ秒の余裕</b>を見て動くと取りこぼしにくいです。</p>
+  </div>
+</div>
+
+<script>
+  // ===== 時刻補正（worldtimeapi、失敗時は端末時計） =====
+  let offset = 0; // 補正値(ms): calibrated = Date.now() + offset
+  async function calibrate() {
+    try {
+      const before = Date.now();
+      const res = await fetch("https://worldtimeapi.org/api/timezone/Asia/Tokyo", { cache: "no-store" });
+      const after = Date.now();
+      const j = await res.json();
+      const serverMs = Date.parse(j.utc_datetime || j.datetime);
+      if (!serverMs) throw new Error("parse");
+      const latency = (after - before) / 2;
+      offset = serverMs + latency - after;
+      const b = document.getElementById("srcBadge");
+      b.textContent = "NTP補正済み（" + (offset >= 0 ? "+" : "") + Math.round(offset) + "ms）";
+      b.className = "badge badge--ntp";
+    } catch (e) {
+      const b = document.getElementById("srcBadge");
+      b.textContent = "端末時計（要・自動同期）";
+      b.className = "badge badge--local";
+    }
+  }
+
+  function nowJST() {
+    // 補正済みのUTCミリ秒 → JST(+9)の各成分
+    const t = Date.now() + offset;
+    const d = new Date(t + 9 * 3600 * 1000);
+    return { ms: t, h: d.getUTCHours(), m: d.getUTCMinutes(), s: d.getUTCSeconds(), mm: d.getUTCMilliseconds() };
+  }
+  const pad = (n, l = 2) => String(n).padStart(l, "0");
+
+  // 目標時刻までの残り
+  function targetMsFromNow() {
+    const [th, tm, ts] = document.getElementById("target").value.split(":").map(Number);
+    const j = nowJST();
+    const nowSec = j.h * 3600 + j.m * 60 + j.s + j.mm / 1000;
+    let tgtSec = th * 3600 + tm * 60 + (ts || 0);
+    let diff = tgtSec - nowSec;
+    if (diff <= 0) diff += 86400; // 次の同時刻（翌日）
+    return diff; // 秒
+  }
+
+  // ===== カウント音 =====
+  let ac;
+  function beep(freq, dur) {
+    if (!document.getElementById("beep").checked) return;
+    try {
+      ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.frequency.value = freq; o.connect(g); g.connect(ac.destination);
+      g.gain.setValueAtTime(0.2, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+      o.start(); o.stop(ac.currentTime + dur);
+    } catch (e) {}
+  }
+  let lastBeepSec = null, fired = false;
+
+  function tick() {
+    const j = nowJST();
+    document.getElementById("clock").firstChild.textContent =
+      pad(j.h) + ":" + pad(j.m) + ":" + pad(j.s);
+    document.getElementById("ms").textContent = "." + pad(j.mm, 3);
+
+    const remain = targetMsFromNow();
+    const countEl = document.getElementById("count");
+    const countCard = document.getElementById("countCard");
+    const rh = Math.floor(remain / 3600), rm = Math.floor((remain % 3600) / 60), rs = Math.floor(remain % 60);
+    countEl.textContent = pad(rh) + ":" + pad(rm) + ":" + pad(rs);
+
+    // 残り3秒未満かつ目標直後1.5秒間は GO 表示
+    if (remain > 86399 || remain < 1.5) {
+      countCard.classList.add("gocard"); countEl.classList.add("go"); countEl.classList.remove("soon");
+      countEl.textContent = "GO!!";
+      if (!fired) { beep(1320, 0.5); fired = true; }
+    } else {
+      countCard.classList.remove("gocard"); countEl.classList.remove("go");
+      fired = false;
+      if (remain <= 10) {
+        countEl.classList.add("soon");
+        const sec = Math.ceil(remain);
+        if (sec !== lastBeepSec) { beep(880, 0.12); lastBeepSec = sec; }
+      } else {
+        countEl.classList.remove("soon"); lastBeepSec = null;
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // ===== メモ＆チェックリスト（localStorage） =====
+  const memo = document.getElementById("memo");
+  memo.value = localStorage.getItem("yoyaku_memo") || "";
+  memo.addEventListener("input", () => localStorage.setItem("yoyaku_memo", memo.value));
+
+  const checkItems = [
+    "OSの時刻が自動同期になっている",
+    "予約サイトにログイン済み（reCAPTCHA通過済み）",
+    "目的の施設・日付・時間帯の一歩手前まで進んでいる",
+    "確定ボタンの位置を目で確認した",
+    "回線が安定している（できれば有線/Wi-Fi強）",
+  ];
+  const ul = document.getElementById("checklist");
+  const saved = JSON.parse(localStorage.getItem("yoyaku_check") || "[]");
+  checkItems.forEach((txt, i) => {
+    const li = document.createElement("li");
+    const cb = document.createElement("input");
+    cb.type = "checkbox"; cb.checked = !!saved[i];
+    cb.addEventListener("change", () => {
+      const cur = checkItems.map((_, k) => ul.children[k].querySelector("input").checked);
+      localStorage.setItem("yoyaku_check", JSON.stringify(cur));
+    });
+    const span = document.createElement("span"); span.textContent = txt;
+    li.appendChild(cb); li.appendChild(span); ul.appendChild(li);
+  });
+  document.getElementById("target").addEventListener("change", () => { fired = false; lastBeepSec = null; });
+
+  calibrate();
+  setInterval(calibrate, 5 * 60 * 1000); // 5分ごとに再補正
+  tick();
+</script>
+</body>
+</html>
