@@ -63,9 +63,9 @@
           <p class="hero__tag">BADMINTON TEAM</p>
           <h1 class="hero__title">raise</h1>
           <p class="hero__sub">高みへ、もっと上へ。</p>
-          <p class="hero__lead"><span class="nowrap">年齢も経験も関係ない。</span><span class="nowrap">「うまくなりたい」という気持ちひとつで集まった、</span><span class="nowrap">本気のバドミントンチームです。</span></p>
+          <p class="hero__lead"><span class="nowrap">年齢も経験も関係ない。</span><span class="nowrap">「うまくなりたい」という気持ちひとつで集まった、本気のバドミントンチームです。</span></p>
           <div class="hero__actions">
-            <a href="#availability" class="btn btn--primary">空き状況をみる</a>
+            <a href="#availability" class="btn btn--primary">体育館の空き状況</a>
             <a href="#about" class="btn btn--ghost">チームを知る</a>
           </div>
         </div>
@@ -103,7 +103,7 @@
       <div class="features">
         <article class="feature reveal">
           <div class="feature__icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7H20l-6.3 9.3h-3.4L4 7Z"/><path d="M8 7 10.7 16.3M12 7v9.3M16 7 13.3 16.3"/><circle cx="12" cy="18.7" r="2.6"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5H19l-5.3 11.8h-3.4L5 4.5Z"/><path d="M7.5 4.5 10.7 16.3M12 4.5v11.8M16.5 4.5 13.3 16.3"/><circle cx="12" cy="18.7" r="2.6"/></svg>
           </div>
           <h3>練習が中心</h3>
           <p>基礎打ち30分→練習1時間→試合30分。みんな同じメニューで、たくさん打ちます。</p>
@@ -182,6 +182,24 @@
           <img src="images/photo1.jpeg" alt="優勝の賞状とメダル" loading="lazy" />
         </figure>
       </div>
+
+      <!-- ライトボックス（拡大表示＋保存） -->
+      <div class="lightbox" id="lightbox" aria-hidden="true" role="dialog" aria-label="写真の拡大表示">
+        <button class="lightbox__btn lightbox__close" id="lbClose" type="button" aria-label="閉じる">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6 18 18M18 6 6 18"/></svg>
+        </button>
+        <button class="lightbox__btn lightbox__nav lightbox__prev" id="lbPrev" type="button" aria-label="前の写真">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 8 12l7 7"/></svg>
+        </button>
+        <img class="lightbox__img" id="lbImg" src="" alt="" />
+        <button class="lightbox__btn lightbox__nav lightbox__next" id="lbNext" type="button" aria-label="次の写真">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5 16 12l-7 7"/></svg>
+        </button>
+        <a class="lightbox__btn lightbox__save" id="lbSave" download href="#">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M8 11l4 4 4-4M5 19h14"/></svg>
+          <span>保存</span>
+        </a>
+      </div>
     </section>
 
     <!-- Movie（参考動画 + 暗号化された限定動画） -->
@@ -192,12 +210,22 @@
         <p class="section__desc">非公開動画はYouTubeで再生、限定公開動画はパスワードを入れた人だけが見られます。</p>
       </div>
 
-      <h3 class="movie__subhead">非公開動画（YouTubeで再生）</h3>
-      <div class="video-list" id="videoGrid"></div>
-
-      <div class="vault reveal" id="vault">
+      <!-- 非公開動画（🔒・YouTubeで再生） -->
+      <div class="vault reveal">
         <div class="vault__head">
           <span class="vault__lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10" width="15" height="10.5" rx="2.4"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15" r="1.4"/><path d="M12 16.4v1.8"/></svg></span>
+          <div>
+            <strong>非公開動画</strong>
+            <p>タイトルをタップするとYouTubeで再生します。</p>
+          </div>
+        </div>
+        <div class="video-list" id="videoGrid"></div>
+      </div>
+
+      <!-- 限定公開動画（🔗・パスワード保護でサイト内再生） -->
+      <div class="vault reveal" id="vault">
+        <div class="vault__head">
+          <span class="vault__lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 14.5 14.5 9.5"/><path d="M11.4 7.6 13 6a3.7 3.7 0 0 1 5.2 5.2l-1.6 1.6"/><path d="M12.6 16.4 11 18a3.7 3.7 0 0 1-5.2-5.2l1.6-1.6"/></svg></span>
           <div>
             <strong>限定公開動画（メンバー限定）</strong>
             <p>メンバー限定の動画です。パスワードを入力してください。</p>

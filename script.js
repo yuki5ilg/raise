@@ -166,6 +166,61 @@ function initSite() {
 
   // 空き状況カレンダー
   initCalendar();
+
+  // 写真ギャラリー（拡大＋保存）
+  initGallery();
+}
+
+// ===== ギャラリー：ライトボックス（拡大表示＋保存） =====
+function initGallery() {
+  const lb = document.getElementById("lightbox");
+  const imgs = Array.from(document.querySelectorAll(".gallery__item img"));
+  if (!lb || !imgs.length) return;
+
+  const lbImg = document.getElementById("lbImg");
+  const saveEl = document.getElementById("lbSave");
+  let index = 0;
+
+  function fileName(src) {
+    const base = src.split("/").pop().split("?")[0] || "photo.jpg";
+    return base.startsWith("raise-") ? base : "raise-" + base;
+  }
+  function show(i) {
+    index = (i + imgs.length) % imgs.length;
+    const src = imgs[index].currentSrc || imgs[index].src;
+    lbImg.src = src;
+    lbImg.alt = imgs[index].alt || "";
+    saveEl.href = src;
+    saveEl.setAttribute("download", fileName(src));
+  }
+  function open(i) {
+    show(i);
+    lb.classList.add("is-open");
+    lb.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+  function close() {
+    lb.classList.remove("is-open");
+    lb.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+
+  imgs.forEach((img, i) => {
+    img.closest(".gallery__item").addEventListener("click", () => open(i));
+  });
+  document.getElementById("lbClose").addEventListener("click", close);
+  document.getElementById("lbPrev").addEventListener("click", () => show(index - 1));
+  document.getElementById("lbNext").addEventListener("click", () => show(index + 1));
+  // 背景クリックで閉じる（画像や操作ボタンは除く）
+  lb.addEventListener("click", (e) => {
+    if (e.target === lb) close();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (!lb.classList.contains("is-open")) return;
+    if (e.key === "Escape") close();
+    else if (e.key === "ArrowLeft") show(index - 1);
+    else if (e.key === "ArrowRight") show(index + 1);
+  });
 }
 
 // ===== 限定公開YouTube動画 =====
@@ -176,6 +231,15 @@ function initSite() {
 function youTubeId(url) {
   const m = String(url).match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([\w-]{11})/);
   return m ? m[1] : null;
+}
+
+// 動画名は YouTube の実タイトルを使う。noembed 経由で取得（CORS許可あり）。
+// 非公開動画は取得できない(403)ので、その場合は JSON の title をそのまま使う。
+function fetchYtTitle(id) {
+  return fetch(`https://noembed.com/embed?url=https://youtu.be/${id}`, { cache: "force-cache" })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((j) => (j && j.title && !j.error ? j.title : null))
+    .catch(() => null);
 }
 
 function renderVideos(grid, list) {
@@ -190,6 +254,10 @@ function renderVideos(grid, list) {
       const titleEl = document.createElement("span");
       titleEl.className = "video-row__title";
       titleEl.textContent = v.title;
+      // YouTube の実タイトルが取れたら差し替える（取れなければ JSON の title のまま）
+      fetchYtTitle(v.id).then((t) => {
+        if (t) titleEl.textContent = t;
+      });
 
       if (v.isPrivate) {
         // 非公開動画は埋め込み不可。タイトル行をタップでYouTubeを開く。
