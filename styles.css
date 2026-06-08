@@ -686,6 +686,74 @@ img { max-width: 100%; display: block; }
   margin-bottom: 16px;
   color: var(--text);
 }
+
+/* 動画リスト（タイトル行）：限定動画ボックスと同じトーンに合わせる */
+.video-list { display: flex; flex-direction: column; gap: 12px; }
+.video-row {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+.video-row__link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 15px 18px;
+  background: none;
+  border: 0;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.video-row__link:hover { background: var(--bg-soft); }
+.video-row__title { flex: 1; font-size: 15px; font-weight: 700; line-height: 1.4; }
+.video-row__hint { font-size: 12px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.video-row__arrow { color: var(--muted); font-size: 14px; }
+.video-row__icon {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  position: relative;
+}
+.video-row__icon::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 53%;
+  transform: translate(-50%, -50%);
+  border-style: solid;
+  border-width: 7px 0 7px 11px;
+  border-color: transparent transparent transparent currentColor;
+}
+.video-row__icon--yt { background: #ff0000; color: #fff; }
+.video-row__icon--play { background: rgba(194, 98, 46, 0.14); color: var(--brand); }
+.video-row__chevron {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg);
+  transition: transform 0.25s ease;
+}
+.video-row.is-open .video-row__chevron { transform: rotate(-135deg); }
+.video-row__embed { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+.video-row.is-open .video-row__embed { max-height: 60vw; }
+@media (min-width: 720px) { .video-row.is-open .video-row__embed { max-height: 420px; } }
+.video-row__embed iframe {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
 .vault {
   margin-top: 32px;
   background: var(--card);

@@ -181,41 +181,65 @@ function youTubeId(url) {
 function renderVideos(grid, list) {
   grid.innerHTML = "";
   (list || [])
-    .map((v) => ({ title: v.title || "", id: youTubeId(v.url), url: v.url, isPrivate: !!v.private }))
+    .map((v) => ({ title: v.title || "動画", id: youTubeId(v.url), url: v.url, isPrivate: !!v.private }))
     .filter((v) => v.id)
     .forEach((v) => {
-      const fig = document.createElement("figure");
-      fig.className = "video__item";
+      const row = document.createElement("div");
+      row.className = "video-row";
+
+      const titleEl = document.createElement("span");
+      titleEl.className = "video-row__title";
+      titleEl.textContent = v.title;
+
       if (v.isPrivate) {
-        // 非公開動画は埋め込み不可。YouTubeで開くリンクカードにする。
+        // 非公開動画は埋め込み不可。タイトル行をタップでYouTubeを開く。
         const link = document.createElement("a");
-        link.className = "video__frame video__frame--link";
+        link.className = "video-row__link";
         link.href = v.url;
         link.target = "_blank";
         link.rel = "noopener noreferrer";
-        link.innerHTML =
-          '<span class="video__play" aria-hidden="true"></span>' +
-          '<span class="video__open">YouTubeで再生</span>';
-        fig.appendChild(link);
+        link.innerHTML = '<span class="video-row__icon video-row__icon--yt" aria-hidden="true"></span>';
+        link.appendChild(titleEl);
+        link.insertAdjacentHTML(
+          "beforeend",
+          '<span class="video-row__hint">YouTubeで再生</span>' +
+            '<span class="video-row__arrow" aria-hidden="true">↗</span>'
+        );
+        row.appendChild(link);
       } else {
-        const frame = document.createElement("div");
-        frame.className = "video__frame";
-        const iframe = document.createElement("iframe");
-        iframe.src = `https://www.youtube-nocookie.com/embed/${v.id}`;
-        iframe.title = v.title || "raise video";
-        iframe.loading = "lazy";
-        iframe.allow =
-          "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
-        iframe.allowFullscreen = true;
-        frame.appendChild(iframe);
-        fig.appendChild(frame);
+        // 限定公開動画はタイトル行をタップでサイト内に埋め込み再生（アコーディオン）。
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "video-row__link";
+        btn.setAttribute("aria-expanded", "false");
+        btn.innerHTML = '<span class="video-row__icon video-row__icon--play" aria-hidden="true"></span>';
+        btn.appendChild(titleEl);
+        btn.insertAdjacentHTML(
+          "beforeend",
+          '<span class="video-row__hint">タップで再生</span>' +
+            '<span class="video-row__chevron" aria-hidden="true"></span>'
+        );
+        const embed = document.createElement("div");
+        embed.className = "video-row__embed";
+        btn.addEventListener("click", () => {
+          const open = row.classList.toggle("is-open");
+          btn.setAttribute("aria-expanded", open ? "true" : "false");
+          if (open && !embed.dataset.loaded) {
+            const iframe = document.createElement("iframe");
+            iframe.src = `https://www.youtube-nocookie.com/embed/${v.id}`;
+            iframe.title = v.title;
+            iframe.loading = "lazy";
+            iframe.allow =
+              "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+            iframe.allowFullscreen = true;
+            embed.appendChild(iframe);
+            embed.dataset.loaded = "1";
+          }
+        });
+        row.appendChild(btn);
+        row.appendChild(embed);
       }
-      if (v.title) {
-        const cap = document.createElement("figcaption");
-        cap.textContent = v.title;
-        fig.appendChild(cap);
-      }
-      grid.appendChild(fig);
+      grid.appendChild(row);
     });
 }
 
