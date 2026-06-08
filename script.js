@@ -3,9 +3,9 @@
 // 入力を同じ方式でハッシュ化して照合するため、ソースを見ても元の合言葉は分からない。
 // 合言葉を変えるには tools/passcode.html で新しい検証ハッシュを生成して差し替える。
 const PASS_VERIFIER = {
-  salt: "tJQUOC5I/1Bjptdg1zwLMQ==",
+  salt: "Wjrpxg9PgNpAYPagvVdxSA==",
   iterations: 200000,
-  hash: "LDl9EINX/zHDb86x2+Sv+AVB/GdJIWkdCcz4zivSwx8=",
+  hash: "I2na1NZk5v2KYQLxmR3qgj1wD7oAYWsNe5YbNrpVNCU=",
 };
 const STORAGE_KEY = "raise_authed";
 
