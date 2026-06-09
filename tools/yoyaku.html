@@ -194,8 +194,21 @@
   }
 
   // ===== メモ＆チェックリスト（localStorage） =====
+  const DEFAULT_MEMO = [
+    "■ 偵察メモ（本番前に1回予約を通して埋める）",
+    "1) ログイン直後の画面名 / URL：",
+    "2) 施設を選ぶ画面：押すボタン名 →",
+    "3) 施設名・部屋名：",
+    "4) 日付を選ぶ画面：",
+    "5) 時間帯のコマ選択：",
+    "6) 申込内容の入力欄（あれば）：",
+    "7) 確定ボタンの名前・位置：",
+    "",
+    "★ 0時まで“先に進めておける”のはどの画面まで？（コマ選択が0時まで押せない等）：",
+    "★ ログインしてから何分でセッション切れ？：",
+  ].join("\n");
   const memo = document.getElementById("memo");
-  memo.value = localStorage.getItem("yoyaku_memo") || "";
+  memo.value = localStorage.getItem("yoyaku_memo") || DEFAULT_MEMO;
   memo.addEventListener("input", () => localStorage.setItem("yoyaku_memo", memo.value));
 
   const checkItems = [
