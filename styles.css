@@ -626,6 +626,10 @@ img { max-width: 100%; display: block; }
   border-radius: 5px;
 }
 
+/* 予約アタック準備への導線 */
+.cal__attackwrap { text-align: center; margin-top: 22px; }
+.cal__attackhint { color: var(--muted); font-size: 12.5px; margin-top: 8px; }
+
 /* ===== Footer (ロゴ・ダーク) ===== */
 .footer {
   background: #15110d;
