@@ -59,6 +59,9 @@
   ul.check { list-style: none; padding: 0; margin: 0; }
   ul.check li { display: flex; gap: 10px; align-items: flex-start; padding: 7px 0; font-size: 14.5px; }
   ul.check input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--brand); flex: none; }
+  ol.steps { margin: 0; padding-left: 22px; }
+  ol.steps li { padding: 5px 0; font-size: 14.5px; }
+  ol.steps b { color: var(--brand); }
   .tips { color: var(--muted); font-size: 13px; }
   .tips b { color: var(--text); }
   .toggle { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 7px; justify-content: center; margin-top: 12px; }
@@ -89,13 +92,27 @@
   <p class="tips" style="text-align:center;margin:10px 0 18px;">※ 早めに開いてログイン＆reCAPTCHAを通し、目的画面の一歩手前で待機しておくのがコツ。</p>
 
   <div class="card">
-    <h2>最短手順メモ</h2>
-    <textarea id="memo" placeholder="例）ログイン → 施設選択：◯◯体育館 → 日付：翌週◯曜 → 時間：19-21 → 確定ボタン位置… を一度実際にたどって書いておく"></textarea>
+    <h2>① 0時前に準備（23:55〜）</h2>
+    <ul class="check" id="checklist"></ul>
+    <p class="tips" style="margin-top:8px">磯上体育館を選んで <b>ShisetsuMultiSelect（カレンダー照会）</b> の画面まで進めて待機。<b>最新月は0時まで出ません</b>。セッションが切れたら再ログインしてここまで戻る。</p>
   </div>
 
   <div class="card">
-    <h2>直前チェックリスト</h2>
-    <ul class="check" id="checklist"></ul>
+    <h2>② 0:00の手順（上から最速で → 確定）</h2>
+    <ol class="steps">
+      <li>表示された<b>最新月</b>を選択</li>
+      <li><b>「31日表示」</b>を選択</li>
+      <li><b>「表示」</b>を押す</li>
+      <li>目的の<b>日 × 時間のセル（◯）</b>を選択</li>
+      <li><b>「次に進む」</b></li>
+      <li>利用人数に <b>4</b> を入力 → <b>「次に進む」</b></li>
+      <li><b>「注意事項及び利用規約を承認します」</b>にチェック → <b>「確定」</b></li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>メモ</h2>
+    <textarea id="memo" placeholder="目的の日付・時間帯、代替の体育館/日時、気づいたことなど"></textarea>
   </div>
 
   <div class="card tips">
@@ -194,29 +211,17 @@
   }
 
   // ===== メモ＆チェックリスト（localStorage） =====
-  const DEFAULT_MEMO = [
-    "■ 偵察メモ（本番前に1回予約を通して埋める）",
-    "1) ログイン直後の画面名 / URL：",
-    "2) 施設を選ぶ画面：押すボタン名 →",
-    "3) 施設名・部屋名：",
-    "4) 日付を選ぶ画面：",
-    "5) 時間帯のコマ選択：",
-    "6) 申込内容の入力欄（あれば）：",
-    "7) 確定ボタンの名前・位置：",
-    "",
-    "★ 0時まで“先に進めておける”のはどの画面まで？（コマ選択が0時まで押せない等）：",
-    "★ ログインしてから何分でセッション切れ？：",
-  ].join("\n");
   const memo = document.getElementById("memo");
-  memo.value = localStorage.getItem("yoyaku_memo") || DEFAULT_MEMO;
+  memo.value = localStorage.getItem("yoyaku_memo") || "";
   memo.addEventListener("input", () => localStorage.setItem("yoyaku_memo", memo.value));
 
   const checkItems = [
     "OSの時刻が自動同期になっている",
-    "予約サイトにログイン済み（reCAPTCHA通過済み）",
-    "目的の施設・日付・時間帯の一歩手前まで進んでいる",
-    "確定ボタンの位置を目で確認した",
-    "回線が安定している（できれば有線/Wi-Fi強）",
+    "ログイン済み（利用者番号・パスワード・reCAPTCHA通過）",
+    "「空き照会・予約」→「利用目的から選ぶ」→「運動施設…大型体育館」→「バドミントン」まで進んだ",
+    "「磯上体育館」にチェック →「次に進む」で施設選択を確定した",
+    "ShisetsuMultiSelect（カレンダー照会）の画面で待機している",
+    "回線が安定している（有線 or 電波強め）",
   ];
   const ul = document.getElementById("checklist");
   const saved = JSON.parse(localStorage.getItem("yoyaku_check") || "[]");
