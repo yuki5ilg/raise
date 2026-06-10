@@ -16,10 +16,15 @@
 <body>
   <!-- ===== ログインゲート ===== -->
   <div id="login" class="login">
-    <div class="login__bg" aria-hidden="true"></div>
+    <div class="login__slides" aria-hidden="true">
+      <div class="login__slide" style="background-image:url('images/photo2.jpeg')"></div>
+      <div class="login__slide" style="background-image:url('images/photo5.jpeg')"></div>
+      <div class="login__slide" style="background-image:url('images/photo3.jpeg')"></div>
+      <div class="login__slide" style="background-image:url('images/photo1.jpeg')"></div>
+    </div>
     <div class="login__overlay" aria-hidden="true"></div>
     <form id="loginForm" class="login__card" autocomplete="off">
-      <div class="login__logo">raise</div>
+      <div class="login__logo" role="img" aria-label="raise"></div>
       <p class="login__lead">合言葉を入力してね</p>
       <div class="login__field">
         <input
@@ -49,7 +54,7 @@
         <a href="#gallery">Gallery</a>
         <a href="#movie">動画</a>
         <a href="#availability">空き状況</a>
-        <a href="tools/yoyaku.html" target="_blank" rel="noopener">予約準備</a>
+        <a href="tools/yoyaku.html">予約準備</a>
         <a href="#join">Members</a>
       </nav>
       <button class="nav-toggle" id="navToggle" aria-label="メニュー" aria-expanded="false">
@@ -62,7 +67,7 @@
       <div class="hero__inner">
         <div class="hero__text">
           <p class="hero__tag">BADMINTON TEAM</p>
-          <h1 class="hero__title">raise</h1>
+          <h1 class="hero__title" aria-label="raise"></h1>
           <p class="hero__sub">挑戦。さらなる高みへ。</p>
           <p class="hero__lead"><span class="nowrap">年齢も経験も関係ない。</span><span class="nowrap">「うまくなりたい」という気持ちひとつで集まった、本気のバドミントンチーム</span></p>
           <div class="hero__actions">
@@ -121,7 +126,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4.5h10v4a5 5 0 0 1-10 0v-4Z"/><path d="M7 6.5H4.2v1.6a2.8 2.8 0 0 0 2.8 2.8M17 6.5h2.8v1.6a2.8 2.8 0 0 1-2.8 2.8"/><path d="M12 13.4V17M9 20.5h6M9.8 20.5l.4-3.6h3.6l.4 3.6"/></svg>
           </div>
           <h3>大会で勝つ</h3>
-          <p>市民大会やリーグ戦に挑戦。本気で勝ちにいく。</p>>>></p>
+          <p>市民大会やリーグ戦に挑戦。本気で勝ちにいく。</p>
         </article>
       </div>
     </section>
@@ -261,7 +266,7 @@
         </p>
       </div>
       <div class="cal__attackwrap">
-        <a class="btn btn--primary" href="tools/yoyaku.html" target="_blank" rel="noopener">⏱ 予約アタック準備を開く ↗</a>
+        <a class="btn btn--primary" href="tools/yoyaku.html">⏱ 予約アタック準備を開く</a>
         <p class="cal__attackhint">0時の先着予約に向けた時計＆手順メモ（別ページ）</p>
       </div>
     </section>
