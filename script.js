@@ -110,8 +110,18 @@ function initSite() {
   });
   nav.querySelectorAll("a").forEach((a) => a.addEventListener("click", closeNav));
 
-  // スクロールで要素をふわっと表示
+  // スクロールで要素をふわっと表示（兄弟どうしは少しずつ遅らせてスタッガー）
   const reveals = document.querySelectorAll(".reveal");
+  const groups = new Map();
+  reveals.forEach((el) => {
+    const p = el.parentElement;
+    const arr = groups.get(p) || [];
+    arr.push(el);
+    groups.set(p, arr);
+  });
+  groups.forEach((arr) => {
+    if (arr.length > 1) arr.forEach((el, i) => el.style.setProperty("--rd", (i * 0.08).toFixed(2) + "s"));
+  });
   if ("IntersectionObserver" in window) {
     const io = new IntersectionObserver(
       (entries) => {
@@ -128,6 +138,9 @@ function initSite() {
   } else {
     reveals.forEach((el) => el.classList.add("in"));
   }
+
+  // リッチモーション：スクロール進捗バー＋ヒーローのパララックス
+  initMotion();
 
   // 数字のカウントアップ
   const counters = document.querySelectorAll(".stats__num");
@@ -166,6 +179,43 @@ function initSite() {
 
   // 空き状況カレンダー
   initCalendar();
+}
+
+// ===== リッチモーション（スクロール進捗バー＋パララックス） =====
+function initMotion() {
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  // 上部のスクロール進捗バー
+  let bar = document.querySelector(".scrollprog");
+  if (!bar) {
+    bar = document.createElement("div");
+    bar.className = "scrollprog";
+    document.body.appendChild(bar);
+  }
+  const heroPhoto = document.querySelector(".hero__photo");
+  const doc = document.documentElement;
+  let ticking = false;
+
+  const update = () => {
+    const max = doc.scrollHeight - doc.clientHeight;
+    bar.style.width = max > 0 ? (doc.scrollTop / max) * 100 + "%" : "0";
+    // ヒーロー写真をゆっくり沈める（画面内のときだけ）
+    if (heroPhoto && window.scrollY < window.innerHeight) {
+      heroPhoto.style.transform = "translateY(" + window.scrollY * 0.06 + "px)";
+    }
+    ticking = false;
+  };
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    },
+    { passive: true }
+  );
+  update();
 }
 
 // ===== 限定公開YouTube動画 =====

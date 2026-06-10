@@ -1071,3 +1071,145 @@ img { max-width: 100%; display: block; }
   .timeline__item { gap: 16px; padding: 18px; }
   .timeline__day { flex-basis: 54px; height: 54px; font-size: 17px; }
 }
+
+/* =====================================================================
+   ✦ Refined Warm — editorial theme (Fable)
+   既存の構造はそのまま、見た目と動きを"温かみ×洗練"に底上げ。
+   後置きの上書きなので、上のルールより優先されます。
+   ===================================================================== */
+:root {
+  --font-display: "Fraunces", "Shippori Mincho", Georgia, serif;
+  --font-body: "Inter", "Noto Sans JP", system-ui, -apple-system, sans-serif;
+
+  --bg: #f6eee0;
+  --bg-soft: #efe3d0;
+  --card: #fffaf2;
+  --text: #2a221a;
+  --ink: #1b140f;
+  --muted: #91826d;
+  --line: rgba(58, 42, 24, 0.12);
+  --brand: #bd5a2a;
+  --brand-2: #d99a4e;
+  --gold: #b0853a;
+  --grad: linear-gradient(115deg, #bd5a2a 0%, #d99a4e 96%);
+  --radius: 20px;
+  --shadow: 0 30px 70px -28px rgba(74, 46, 18, 0.42);
+  --shadow-soft: 0 18px 44px -26px rgba(74, 46, 18, 0.32);
+  --ease: cubic-bezier(0.2, 0.7, 0.15, 1);
+}
+
+html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--text);
+  background:
+    radial-gradient(120% 80% at 6% -6%, rgba(217, 154, 78, 0.13), transparent 55%),
+    radial-gradient(110% 70% at 100% 106%, rgba(189, 90, 42, 0.08), transparent 55%),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+/* ===== Typography ===== */
+.section__title,
+.hero__title,
+.hero__sub {
+  font-family: var(--font-display);
+}
+.section__title {
+  font-size: clamp(32px, 6.2vw, 56px);
+  font-weight: 600;
+  line-height: 1.14;
+  letter-spacing: -0.01em;
+}
+.section__desc { font-size: 15.5px; max-width: 560px; margin-left: auto; margin-right: auto; }
+
+/* キッカー（タグ）＋ ドローインする罫線 */
+.section__head { margin-bottom: clamp(44px, 7vw, 72px); }
+.section__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+.section__tag::before {
+  content: "";
+  width: 26px; height: 1px;
+  background: currentColor;
+  opacity: 0.5;
+}
+.section__head::after {
+  content: "";
+  display: block;
+  width: 0; height: 2px;
+  margin: 26px auto 0;
+  border-radius: 2px;
+  background: var(--grad);
+  transition: width 0.9s var(--ease) 0.15s;
+}
+.section__head.in::after { width: 56px; }
+
+/* ===== Hero ===== */
+.hero__title {
+  font-weight: 600;
+  font-size: clamp(82px, 14vw, 150px);
+  letter-spacing: -0.03em;
+  line-height: 0.92;
+}
+.hero__tag { font-family: var(--font-body); letter-spacing: 0.42em; }
+.hero__sub { font-weight: 500; }
+.hero__photo { border-radius: 26px; border-width: 8px; }
+.hero__photo img { border-radius: 18px; }
+
+/* ===== Header / Nav ===== */
+.header { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.nav a { font-family: var(--font-body); font-weight: 600; font-size: 14.5px; }
+
+/* ===== Buttons ===== */
+.btn { letter-spacing: 0.02em; padding: 15px 32px; }
+.btn--primary { box-shadow: 0 16px 34px -14px rgba(189, 90, 42, 0.6); }
+.btn--primary:hover { transform: translateY(-3px) scale(1.01); }
+
+/* ===== Cards: soft hover lift ===== */
+.feature, .vault, .timeline__item {
+  transition: transform 0.5s var(--ease), box-shadow 0.5s var(--ease);
+}
+@media (hover: hover) {
+  .feature:hover, .vault:hover { transform: translateY(-6px); box-shadow: var(--shadow); }
+}
+
+/* ===== Footer ===== */
+.footer { background: #1b1410; }
+
+/* ===== Reveal: richer + per-item stagger（--rd はJSで付与） ===== */
+.reveal {
+  opacity: 0;
+  transform: translateY(34px);
+  transition: opacity 1s var(--ease), transform 1s var(--ease);
+  transition-delay: var(--rd, 0s);
+}
+.reveal.in { opacity: 1; transform: none; }
+.reveal-left { transform: translateX(-44px); }
+.reveal-right { transform: translateX(44px); }
+.reveal-zoom { transform: scale(0.92); }
+.reveal-left.in, .reveal-right.in, .reveal-zoom.in { transform: none; }
+
+/* ===== Scroll progress bar（JSで生成） ===== */
+.scrollprog {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px; width: 0;
+  background: var(--grad);
+  z-index: 1000;
+  box-shadow: 0 0 12px rgba(189, 90, 42, 0.5);
+  transition: width 0.1s linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .scrollprog { display: none; }
+}
