@@ -66,10 +66,21 @@
   .tips b { color: var(--text); }
   .toggle { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 7px; justify-content: center; margin-top: 12px; }
   .toggle input { width: 17px; height: 17px; accent-color: var(--brand); }
+  .home {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--muted); font-size: 13px; font-weight: 700; text-decoration: none;
+    margin-bottom: 14px;
+  }
+  .home:active, .home:hover { color: var(--brand); }
+  .btn--home {
+    background: none; color: var(--brand); border: 1.5px solid var(--brand);
+    box-shadow: none; margin-top: 4px;
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <a class="home" href="../index.html">← ホームに戻る</a>
   <h1>予約アタック準備</h1>
   <p class="sub">0時の先着予約に間に合わせるための時計＆手順メモ。ログイン・reCAPTCHA・最終確定はあなたが手で操作します。</p>
 
@@ -110,16 +121,13 @@
     </ol>
   </div>
 
-  <div class="card">
-    <h2>メモ</h2>
-    <textarea id="memo" placeholder="目的の日付・時間帯、代替の体育館/日時、気づいたことなど"></textarea>
-  </div>
-
   <div class="card tips">
     <h2 style="color:var(--text)">時間ズレ対策</h2>
     <p>この時計は <b>worldtimeapi</b> で日本標準時に補正します（<span class="badge badge--ntp">NTP補正</span> 表示なら同期成功）。失敗時は端末時計を使うので、その場合は <b>OSの時刻を自動同期</b>にしておいてください（Windows/Mac/スマホとも標準でON）。</p>
     <p>サーバー側の時計と完全一致はできないため、<b>0:00:00ぴったりではなく数百ミリ秒の余裕</b>を見て動くと取りこぼしにくいです。</p>
   </div>
+
+  <a class="btn btn--home" href="../index.html">← ホームに戻る</a>
 </div>
 
 <script>
@@ -210,11 +218,7 @@
     requestAnimationFrame(tick);
   }
 
-  // ===== メモ＆チェックリスト（localStorage） =====
-  const memo = document.getElementById("memo");
-  memo.value = localStorage.getItem("yoyaku_memo") || "";
-  memo.addEventListener("input", () => localStorage.setItem("yoyaku_memo", memo.value));
-
+  // ===== チェックリスト（localStorage） =====
   const checkItems = [
     "OSの時刻が自動同期になっている",
     "ログイン済み（利用者番号・パスワード・reCAPTCHA通過）",

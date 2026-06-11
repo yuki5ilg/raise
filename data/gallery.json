@@ -1,0 +1,9 @@
+{
+  "_note": "ギャラリーの写真リスト。サイトの「＋写真を追加する」フォーム（Cloudflare Worker経由）からも自動で追記されます。",
+  "photos": [
+    { "src": "images/photo5.jpeg", "alt": "お揃いのチームTシャツで肩を組む raise のメンバー" },
+    { "src": "images/photo2.jpeg", "alt": "試合前の円陣" },
+    { "src": "images/photo3.jpeg", "alt": "優勝メダルと賞状を手にするメンバー" },
+    { "src": "images/photo1.jpeg", "alt": "優勝の賞状とメダル" }
+  ]
+}

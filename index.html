@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#f3ebdd" />
   <!-- iOSが住所/電話/日付を勝手にリンク(マップ等)化するのを無効化 -->
   <meta name="format-detection" content="telephone=no, date=no, address=no, email=no" />
@@ -81,6 +81,13 @@
       </div>
       <a href="#about" class="hero__scroll" aria-label="下へスクロール"><span></span></a>
     </section>
+
+    <!-- マーキーリボン -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track">
+        <span>RAISE&ensp;—&ensp;BADMINTON TEAM KOBE&ensp;—&ensp;挑戦。さらなる高みへ。&ensp;—&ensp;</span><span>RAISE&ensp;—&ensp;BADMINTON TEAM KOBE&ensp;—&ensp;挑戦。さらなる高みへ。&ensp;—&ensp;</span>
+      </div>
+    </div>
 
     <!-- About -->
     <section class="section about" id="about">
@@ -174,19 +181,36 @@
         <h2 class="section__title">ギャラリー</h2>
         <p class="section__desc">活動の様子</p>
       </div>
-      <div class="gallery-grid reveal">
+      <div class="gallery-grid reveal" id="galleryGrid">
         <figure class="gallery__item">
-          <img src="images/photo5.jpeg" alt="お揃いのチームTシャツで肩を組む raise のメンバー" />
+          <img src="images/photo5.jpeg" alt="お揃いのチームTシャツで肩を組む raise のメンバー" loading="lazy" />
         </figure>
         <figure class="gallery__item">
-          <img src="images/photo2.jpeg" alt="試合前の円陣" />
+          <img src="images/photo2.jpeg" alt="試合前の円陣" loading="lazy" />
         </figure>
         <figure class="gallery__item">
-          <img src="images/photo3.jpeg" alt="優勝メダルと賞状を手にするメンバー" />
+          <img src="images/photo3.jpeg" alt="優勝メダルと賞状を手にするメンバー" loading="lazy" />
         </figure>
         <figure class="gallery__item">
-          <img src="images/photo1.jpeg" alt="優勝の賞状とメダル" />
+          <img src="images/photo1.jpeg" alt="優勝の賞状とメダル" loading="lazy" />
         </figure>
+      </div>
+
+      <!-- 写真の追加（メンバー用） -->
+      <div class="uploader reveal" id="photoUploader">
+        <button type="button" class="uploader__toggle" id="photoUpToggle" aria-expanded="false">＋ 写真を追加する</button>
+        <form class="uploader__form" id="photoUpForm" hidden>
+          <label class="uploader__drop" id="photoDrop">
+            <input type="file" id="photoFiles" accept="image/*" multiple hidden />
+            <span>タップして写真を選択（複数OK）</span>
+          </label>
+          <div class="uploader__previews" id="photoPreviews"></div>
+          <div class="uploader__foot">
+            <input type="password" id="photoPass" placeholder="投稿パスワード" autocomplete="off" />
+            <button type="submit" class="btn btn--primary">登録する</button>
+          </div>
+          <p class="uploader__msg" id="photoMsg" role="status"></p>
+        </form>
       </div>
     </section>
 
@@ -225,6 +249,20 @@
         </form>
         <p class="vault__msg" id="vaultMsg" role="status"></p>
         <div class="video-list" id="vaultGrid"></div>
+      </div>
+
+      <!-- 動画の追加（メンバー用） -->
+      <div class="uploader reveal" id="videoUploader">
+        <button type="button" class="uploader__toggle" id="videoUpToggle" aria-expanded="false">＋ 動画を追加する</button>
+        <form class="uploader__form" id="videoUpForm" hidden>
+          <div class="uploader__rows" id="videoRows"></div>
+          <button type="button" class="uploader__addrow" id="videoAddRow">＋ 行を追加</button>
+          <div class="uploader__foot">
+            <input type="password" id="videoPass" placeholder="投稿パスワード" autocomplete="off" />
+            <button type="submit" class="btn btn--primary">登録する</button>
+          </div>
+          <p class="uploader__msg" id="videoMsg" role="status"></p>
+        </form>
       </div>
     </section>
 
@@ -338,9 +376,31 @@
 
     <footer class="footer">
       <img class="footer__logo" src="images/photo4.jpeg" alt="raise ロゴ" loading="lazy" />
+      <nav class="footer__nav">
+        <a href="#about">About</a>
+        <a href="#champions">Champions</a>
+        <a href="#gallery">Gallery</a>
+        <a href="#movie">動画</a>
+        <a href="#availability">空き状況</a>
+      </nav>
       <p class="footer__copy">© <span id="year"></span> raise Badminton Team. All rights reserved.</p>
+      <a href="#top" class="footer__top" aria-label="ページの先頭へ">↑</a>
     </footer>
   </div>
+
+  <!-- ライトボックス（ギャラリー拡大表示） -->
+  <div class="lightbox" id="lightbox" hidden>
+    <button type="button" class="lightbox__close" id="lbClose" aria-label="閉じる">×</button>
+    <button type="button" class="lightbox__nav lightbox__nav--prev" id="lbPrev" aria-label="前の写真">‹</button>
+    <figure class="lightbox__body">
+      <img id="lbImg" src="" alt="" />
+      <figcaption id="lbCap"></figcaption>
+    </figure>
+    <button type="button" class="lightbox__nav lightbox__nav--next" id="lbNext" aria-label="次の写真">›</button>
+  </div>
+
+  <!-- フィルムグレイン -->
+  <div class="grain" aria-hidden="true"></div>
 
   <script src="script.js"></script>
 </body>

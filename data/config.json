@@ -1,0 +1,4 @@
+{
+  "_note": "uploadApi にCloudflare WorkerのURL（例: https://raise-upload.xxxx.workers.dev）を設定すると、サイトから動画・写真を追加できるようになります。手順は worker/README.md を参照。",
+  "uploadApi": ""
+}

@@ -179,6 +179,255 @@ function initSite() {
 
   // 空き状況カレンダー
   initCalendar();
+
+  // ギャラリー（gallery.json から描画＋ライトボックス）
+  initGallery();
+
+  // 動画・写真の追加フォーム
+  initUpload();
+}
+
+// ===== ギャラリー =====
+// data/gallery.json があればそこから描画（追加機能の反映先）。
+// 無ければHTMLに書かれた初期の4枚をそのまま使う。
+function initGallery() {
+  const grid = document.getElementById("galleryGrid");
+  if (!grid) return;
+  let photos = [];
+
+  const collect = () => {
+    photos = Array.from(grid.querySelectorAll("img")).map((img) => ({ src: img.getAttribute("src"), alt: img.alt || "" }));
+  };
+
+  const render = (list) => {
+    grid.innerHTML = "";
+    list.forEach((p) => {
+      const fig = document.createElement("figure");
+      fig.className = "gallery__item";
+      const img = document.createElement("img");
+      img.src = p.src;
+      img.alt = p.alt || "";
+      img.loading = "lazy";
+      fig.appendChild(img);
+      grid.appendChild(fig);
+    });
+    collect();
+  };
+
+  fetch("data/gallery.json", { cache: "no-store" })
+    .then((res) => (res.ok ? res.json() : null))
+    .then((json) => {
+      if (json && Array.isArray(json.photos) && json.photos.length) render(json.photos);
+      else collect();
+    })
+    .catch(collect);
+  collect();
+
+  // ライトボックス
+  const lb = document.getElementById("lightbox");
+  const lbImg = document.getElementById("lbImg");
+  const lbCap = document.getElementById("lbCap");
+  if (!lb) return;
+  let cur = 0;
+
+  const show = (i) => {
+    cur = (i + photos.length) % photos.length;
+    lbImg.src = photos[cur].src;
+    lbImg.alt = photos[cur].alt || "";
+    lbCap.textContent = photos[cur].alt || "";
+  };
+  const open = (i) => {
+    show(i);
+    lb.hidden = false;
+    document.body.style.overflow = "hidden";
+  };
+  const close = () => {
+    lb.hidden = true;
+    lbImg.src = "";
+    document.body.style.overflow = "";
+  };
+
+  grid.addEventListener("click", (e) => {
+    const fig = e.target.closest(".gallery__item");
+    if (!fig) return;
+    open(Array.from(grid.children).indexOf(fig));
+  });
+  document.getElementById("lbClose").addEventListener("click", close);
+  document.getElementById("lbPrev").addEventListener("click", () => show(cur - 1));
+  document.getElementById("lbNext").addEventListener("click", () => show(cur + 1));
+  lb.addEventListener("click", (e) => {
+    if (e.target === lb) close();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (lb.hidden) return;
+    if (e.key === "Escape") close();
+    if (e.key === "ArrowLeft") show(cur - 1);
+    if (e.key === "ArrowRight") show(cur + 1);
+  });
+  // スワイプで前後移動
+  let touchX = null;
+  lb.addEventListener("touchstart", (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+  lb.addEventListener("touchend", (e) => {
+    if (touchX === null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 48) show(cur + (dx < 0 ? 1 : -1));
+    touchX = null;
+  }, { passive: true });
+}
+
+// ===== 動画・写真の追加（Cloudflare Worker 経由でリポジトリにコミット） =====
+// data/config.json の uploadApi にWorkerのURLを設定すると有効になる。
+function initUpload() {
+  let api = "";
+  fetch("data/config.json", { cache: "no-store" })
+    .then((res) => (res.ok ? res.json() : {}))
+    .then((cfg) => { api = (cfg && cfg.uploadApi) || ""; })
+    .catch(() => {});
+
+  const needSetup = (msgEl) => {
+    if (api) return false;
+    msgEl.textContent = "アップロードAPIが未設定です（worker/README.md の手順でセットアップしてね）";
+    return true;
+  };
+
+  // --- 開閉トグル（共通） ---
+  const wireToggle = (btnId, formId) => {
+    const btn = document.getElementById(btnId);
+    const form = document.getElementById(formId);
+    if (!btn || !form) return;
+    btn.addEventListener("click", () => {
+      const opened = form.hidden;
+      form.hidden = !opened;
+      btn.setAttribute("aria-expanded", String(opened));
+    });
+  };
+  wireToggle("videoUpToggle", "videoUpForm");
+  wireToggle("photoUpToggle", "photoUpForm");
+
+  // --- 動画の追加（複数行） ---
+  const videoForm = document.getElementById("videoUpForm");
+  if (videoForm) {
+    const rows = document.getElementById("videoRows");
+    const msg = document.getElementById("videoMsg");
+    const addRow = () => {
+      const row = document.createElement("div");
+      row.className = "uploader__row";
+      row.innerHTML =
+        '<input type="text" placeholder="タイトル" aria-label="動画タイトル" />' +
+        '<input type="url" placeholder="https://youtu.be/..." aria-label="動画URL" inputmode="url" />' +
+        '<button type="button" class="uploader__rowdel" aria-label="この行を削除">×</button>';
+      row.querySelector(".uploader__rowdel").addEventListener("click", () => {
+        if (rows.children.length > 1) row.remove();
+      });
+      rows.appendChild(row);
+    };
+    addRow();
+    document.getElementById("videoAddRow").addEventListener("click", addRow);
+
+    videoForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (needSetup(msg)) return;
+      const items = Array.from(rows.querySelectorAll(".uploader__row"))
+        .map((row) => {
+          const [t, u] = row.querySelectorAll("input");
+          return { title: t.value.trim(), url: u.value.trim() };
+        })
+        .filter((v) => v.url);
+      if (!items.length) { msg.textContent = "URLを入力してね"; return; }
+      if (items.some((v) => !youTubeId(v.url))) { msg.textContent = "YouTubeのURLじゃないみたい…確認してね"; return; }
+      const pass = document.getElementById("videoPass").value;
+      if (!pass) { msg.textContent = "投稿パスワードを入力してね"; return; }
+      msg.textContent = "登録しています…";
+      try {
+        const res = await fetch(api.replace(/\/$/, "") + "/add-videos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pass, videos: items }),
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json.error || "登録に失敗しました");
+        msg.textContent = `${items.length}本 登録したよ！反映まで1〜2分待ってね`;
+        rows.innerHTML = "";
+        addRow();
+        document.getElementById("videoPass").value = "";
+      } catch (err) {
+        msg.textContent = err.message || "登録に失敗しました";
+      }
+    });
+  }
+
+  // --- 写真の追加（複数枚・送信前に縮小） ---
+  const photoForm = document.getElementById("photoUpForm");
+  if (photoForm) {
+    const fileEl = document.getElementById("photoFiles");
+    const prevEl = document.getElementById("photoPreviews");
+    const msg = document.getElementById("photoMsg");
+    let picked = []; // { name, dataUrl }
+
+    const resize = (file) =>
+      new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          const max = 1600;
+          const scale = Math.min(1, max / Math.max(img.width, img.height));
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve({ name: file.name, dataUrl: canvas.toDataURL("image/jpeg", 0.82) });
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("読み込めない画像があるよ")); };
+        img.src = url;
+      });
+
+    fileEl.addEventListener("change", async () => {
+      msg.textContent = "";
+      try {
+        picked = await Promise.all(Array.from(fileEl.files || []).map(resize));
+      } catch (err) {
+        picked = [];
+        msg.textContent = err.message;
+        return;
+      }
+      prevEl.innerHTML = "";
+      picked.forEach((p) => {
+        const img = document.createElement("img");
+        img.src = p.dataUrl;
+        img.alt = p.name;
+        prevEl.appendChild(img);
+      });
+    });
+
+    photoForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (needSetup(msg)) return;
+      if (!picked.length) { msg.textContent = "写真を選んでね"; return; }
+      const pass = document.getElementById("photoPass").value;
+      if (!pass) { msg.textContent = "投稿パスワードを入力してね"; return; }
+      msg.textContent = `${picked.length}枚 アップロード中…`;
+      try {
+        const res = await fetch(api.replace(/\/$/, "") + "/add-photos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            pass,
+            photos: picked.map((p) => ({ name: p.name, data: p.dataUrl.split(",")[1] })),
+          }),
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(json.error || "アップロードに失敗しました");
+        msg.textContent = `${picked.length}枚 登録したよ！反映まで1〜2分待ってね`;
+        picked = [];
+        prevEl.innerHTML = "";
+        fileEl.value = "";
+        document.getElementById("photoPass").value = "";
+      } catch (err) {
+        msg.textContent = err.message || "アップロードに失敗しました";
+      }
+    });
+  }
 }
 
 // ===== リッチモーション（スクロール進捗バー＋パララックス） =====
@@ -216,6 +465,21 @@ function initMotion() {
     { passive: true }
   );
   update();
+
+  // ヒーロー写真の3Dチルト（マウス端末のみ）
+  if (heroPhoto && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    const hero = document.querySelector(".hero");
+    hero.addEventListener("pointermove", (e) => {
+      const r = heroPhoto.getBoundingClientRect();
+      const dx = (e.clientX - r.left - r.width / 2) / r.width;
+      const dy = (e.clientY - r.top - r.height / 2) / r.height;
+      heroPhoto.style.transform =
+        `translateY(${window.scrollY * 0.06}px) perspective(900px) rotateY(${dx * 4}deg) rotateX(${dy * -4}deg)`;
+    });
+    hero.addEventListener("pointerleave", () => {
+      heroPhoto.style.transform = `translateY(${window.scrollY * 0.06}px)`;
+    });
+  }
 }
 
 // ===== 限定公開YouTube動画 =====
@@ -530,8 +794,11 @@ function initCalendar() {
       mark.textContent = MARK[status] || "–";
       cell.append(num, mark);
       cell.addEventListener("click", () => {
+        // 月全体を再構築するとフォーカス喪失でスクロール位置が飛ぶため、
+        // 選択クラスの付け替えと詳細の更新だけ行う
         selectedDate = dateStr;
-        renderMonth();
+        gridEl.querySelectorAll(".cal__cell--sel").forEach((c) => c.classList.remove("cal__cell--sel"));
+        cell.classList.add("cal__cell--sel");
         renderDetail(dateStr);
       });
       gridEl.appendChild(cell);
