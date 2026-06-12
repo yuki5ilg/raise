@@ -91,8 +91,9 @@ def main():
     source = data.get("source", "")
     today = datetime.date.today()
 
-    # いま 21-23 が空いている (日付|館名) の集合
+    # いま 21-23 が空いている (日付|館名) の集合と、各々の状態(ok/ok2)
     cur = set()
+    status_of = {}
     for gym in data.get("gyms", []):
         name = gym.get("name", "")
         for date_str, slots in (gym.get("dates") or {}).items():
@@ -100,8 +101,11 @@ def main():
                 d = datetime.date.fromisoformat(date_str)
             except ValueError:
                 continue
-            if d >= today and slots.get(SLOT) == "ok":
-                cur.add(f"{date_str}|{name}")
+            st = slots.get(SLOT)
+            if d >= today and st in ("ok", "ok2"):
+                key = f"{date_str}|{name}"
+                cur.add(key)
+                status_of[key] = st
 
     prev = load_state()
 
@@ -126,12 +130,14 @@ def main():
     for item in new:
         ds, nm = item.split("|", 1)
         d = datetime.date.fromisoformat(ds)
-        items.append((d, nm.replace("体育館", "")))
-    items.sort()
+        two = status_of.get(item) == "ok2"  # 2面以上空き
+        items.append((d, nm.replace("体育館", ""), two))
+    items.sort(key=lambda x: (x[0], x[1]))
 
     lines = ["📢 体育館に空きが出たよ〜！🏸", ""]
-    for d, nm in items:
-        lines.append(f"🗓 {d.month}/{d.day}({WD[d.weekday()]})　🏟 {nm}　⏰ {slot_disp}")
+    for d, nm, two in items:
+        tag = "　✨2面以上" if two else ""
+        lines.append(f"🗓 {d.month}/{d.day}({WD[d.weekday()]})　🏟 {nm}　⏰ {slot_disp}{tag}")
     lines.append("")
     lines.append("お早めにどうぞ〜！🙌")
     if source:

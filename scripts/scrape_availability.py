@@ -146,6 +146,20 @@ def calendar_form_fields(html):
     return fields
 
 
+def calendar_post(session, html, action, mensu):
+    """空き状況ページのカレンダーフォーム(formMain)を action・面数を指定して再送信する。
+
+    action: "OffsetNext"（翌週へ）, "ChangeMensu"（面数切替）など。
+    mensu : "01"=1面以上, "02"=2面以上 …（searchTaiMensu）。
+    ※面数はサーバー側で保持され、OffsetNextには引き継がれる。面数を変えるのは
+      ChangeMensu のときだけ（searchTaiMensu はそのとき有効）。
+    """
+    fields = [(k, v) for k, v in (calendar_form_fields(html) or [])
+              if k not in ("action", "searchTaiMensu")]
+    return post(session, "/yoyaku/CalendarStatusBrowser.cgi",
+                [("action", action), ("searchTaiMensu", mensu)] + fields)
+
+
 STATUS_IMG = {
     "空いています": "free",
     "予約済みです": "booked",
@@ -197,19 +211,13 @@ def parse_week(html, week_start: datetime.date):
     return result
 
 
-# 取得した生ステータス -> UI用ステータス
+# 取得した生ステータス -> UI用ステータス（1面以上の空き）
 RAW2UI = {"free": "ok", "booked": "full", "closed": "closed"}
 
 
-def main():
-    # サイトは日本時間で動くため「今日」もJSTで求める。
-    # （ランナーがUTCだと、JST 0時以降は前日を照会してシステムエラーになる）
-    JST = datetime.timezone(datetime.timedelta(hours=9))
-    today = datetime.datetime.now(JST).date()
-
-    # 相手サイトが不安定で、200でも空き状況以外のページ（セッション切れ等）が
-    # 返ることがあるため、新しいセッションで数回まで再試行する。
-    html = ""
+def reach_with_retry(today):
+    """空き状況照会ページに到達する。失敗時は新セッションで数回まで再試行。
+    到達できれば (session, html) を、ダメなら (None, None) を返す。"""
     for attempt in range(4):
         session = requests.Session()
         session.headers["User-Agent"] = UA
@@ -220,45 +228,78 @@ def main():
             print(f"到達リトライ {attempt + 1}/4: {e}", file=sys.stderr)
             html = ""
         if "施設別空き状況照会" in html:
-            break
+            return session, html
         time.sleep(3 * (attempt + 1))
-    else:
+    return None, None
+
+
+def walk_weeks(session, html, today, num_weeks, mensu):
+    """到達済みページ(html, 面数01)から、指定面数で全週を走査する。
+    {施設名: {date: {slot: free/booked/closed}}} を返す。"""
+    if mensu != "01":
+        html = calendar_post(session, html, "ChangeMensu", mensu)  # 先頭週を面数切替
+    result = {g: {} for g in TARGETS}
+    week_start = today
+    for week in range(num_weeks):
+        if week > 0:
+            if not calendar_form_fields(html):
+                break
+            html = calendar_post(session, html, "OffsetNext", mensu)  # 面数は保持される
+            week_start = today + datetime.timedelta(days=7 * week)
+            time.sleep(1)  # 行儀よく
+        for gym, days in parse_week(html, week_start).items():
+            for d, slots in days.items():
+                result[gym].setdefault(d, {}).update(slots)
+    return result
+
+
+def main():
+    # サイトは日本時間で動くため「今日」もJSTで求める。
+    # （ランナーがUTCだと、JST 0時以降は前日を照会してシステムエラーになる）
+    JST = datetime.timezone(datetime.timedelta(hours=9))
+    today = datetime.datetime.now(JST).date()
+
+    num_weeks = weeks_to_cover(today)  # 翌々月末まで
+
+    # 相手サイトが不安定なので新セッションで数回まで再試行して到達する。
+    session, html = reach_with_retry(today)
+    if html is None:
         # サイトが応答しない時間帯（深夜メンテ等）は「失敗」ではなく更新スキップ扱いにし、
         # 既存データを保持する（赤い失敗通知で埋まらないように）。
         print("NOTICE: 空き状況ページに到達できませんでした。今回は更新をスキップします（サイト停止中の可能性）。")
         return
 
-    # 施設名 -> {date: {slot: raw status}}
-    merged = {g: {} for g in TARGETS}
-    slot_set = set()
-    week_start = today
-    num_weeks = weeks_to_cover(today)  # 翌々月末まで
-    for week in range(num_weeks):
-        if week > 0:
-            fields = calendar_form_fields(html)
-            if not fields:
-                break
-            fields = [(k, v) for k, v in fields if k != "action"]
-            fields.insert(0, ("action", "OffsetNext"))
-            html = post(session, "/yoyaku/CalendarStatusBrowser.cgi", fields)
-            week_start = today + datetime.timedelta(days=7 * week)
-            time.sleep(1)  # 行儀よく
-        for gym, days in parse_week(html, week_start).items():
-            for d, slots in days.items():
-                merged[gym].setdefault(d, {}).update(slots)
-                slot_set.update(slots.keys())
+    # パス1: 面数1（=1面以上の空き）で全週を取得
+    free1 = walk_weeks(session, html, today, num_weeks, "01")
 
+    # パス2: 別セッションで到達し直し、面数2（=2面以上の空き）で全週を取得。
+    # 面数はサーバー側で保持されるため、ここは独立した走査にする。失敗しても致命ではない
+    # （2面情報なしで通常表示に落とす）。
+    session2, html2 = reach_with_retry(today)
+    free2 = walk_weeks(session2, html2, today, num_weeks, "02") if html2 else {}
+
+    # 突き合わせ: 1面以上の空き=ok、うち2面以上も空き=ok2
+    slot_set = set()
     gyms = []
     for name in TARGETS:
-        dates = {d: {s: RAW2UI[v] for s, v in sorted(slots.items())}
-                 for d, slots in sorted(merged[name].items())}
+        dates = {}
+        for d, slots in sorted(free1.get(name, {}).items()):
+            row = {}
+            for slot, raw in sorted(slots.items()):
+                slot_set.add(slot)
+                if raw == "free":
+                    has2 = free2.get(name, {}).get(d, {}).get(slot) == "free"
+                    row[slot] = "ok2" if has2 else "ok"
+                else:
+                    row[slot] = RAW2UI[raw]
+            dates[d] = row
         gyms.append({"id": name, "name": name, "dates": dates})
 
     out = {
         "updated": datetime.datetime.now(
             datetime.timezone(datetime.timedelta(hours=9))).isoformat(timespec="minutes"),
         "source": f"{BASE}/yoyaku/ShisetsuMultiSelect.cgi",
-        "note": "あじさいネット（神戸市 施設予約）の空き状況照会より自動取得。○=空き ×=予約済み 休=休館。実際の予約は公式サイトで。",
+        "note": "あじさいネット（神戸市 施設予約）の空き状況照会より自動取得。◎=2面以上空き ○=空き ×=予約済み 休=休館。実際の予約は公式サイトで。",
         "slots": sorted(slot_set),  # 時間帯一覧（"09:00～11:00" ... "21:00～23:00"）
         "gyms": gyms,
     }

@@ -906,6 +906,7 @@ img { max-width: 100%; display: block; }
 .cal__legend span { display: inline-flex; align-items: center; gap: 6px; }
 .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .dot--ok { background: #3f9b6b; }
+.dot--ok2 { background: #2f8d5e; box-shadow: 0 0 0 2px rgba(47,141,94,0.35); }
 .dot--few { background: #d9a23f; }
 .dot--full { background: #c0563f; }
 .dot--closed { background: #9b8f96; }
@@ -946,6 +947,9 @@ img { max-width: 100%; display: block; }
 .cal__cell--sel { outline: 2px solid var(--brand); outline-offset: 1px; }
 .cal__cell .num { color: var(--text); }
 .cal__cell--ok { background: rgba(63, 155, 107, 0.14); }
+/* 2面以上の空き（◎）はより濃い緑で強調 */
+.cal__cell--ok2 { background: rgba(63, 155, 107, 0.30); }
+.cal__cell--ok2 .mark { color: #2f8d5e; font-weight: 800; }
 /* 「すべて」で2館以上空いている日は、空き館数を右上にバッジ表示 */
 .cal__cell--multi { background: rgba(63, 155, 107, 0.26); }
 .cal__count {
@@ -1014,6 +1018,8 @@ img { max-width: 100%; display: block; }
 .cal__slotrow .mark { font-size: 13px; }
 .cal__slotrow--ok { background: rgba(63, 155, 107, 0.12); }
 .cal__slotrow--ok .mark { color: #3f9b6b; }
+.cal__slotrow--ok2 { background: rgba(63, 155, 107, 0.22); }
+.cal__slotrow--ok2 .mark { color: #2f8d5e; font-weight: 800; }
 .cal__slotrow--full { color: var(--muted); }
 .cal__slotrow--full .mark { color: #c0563f; }
 .cal__slotrow--closed { color: var(--muted); }

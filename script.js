@@ -1090,8 +1090,9 @@ function initCalendar() {
   const updatedEl = document.getElementById("calUpdated");
   const sourceEl = document.getElementById("calSource");
 
-  const MARK = { ok: "○", full: "×", closed: "休" };
-  const LABEL = { ok: "空き", full: "予約済み", closed: "休館", none: "情報なし" };
+  const MARK = { ok2: "◎", ok: "○", full: "×", closed: "休" };
+  const LABEL = { ok2: "空き(2面以上)", ok: "空き", full: "予約済み", closed: "休館", none: "情報なし" };
+  const isOk = (st) => st === "ok" || st === "ok2"; // 空き（1面以上）判定
   const today = new Date();
   let data = null;
   let activeGym = "all"; // "all" または gyms のインデックス
@@ -1180,8 +1181,9 @@ function initCalendar() {
   function gymStatusAt(gym, dateStr) {
     const day = gym && gym.dates && gym.dates[dateStr];
     if (!day) return "none";
-    // 選択中の時間帯のうち、どれかが空いていれば ok（複数選択対応）
+    // 選択中の時間帯のうち、どれかが空いていれば ok（複数選択対応）。2面以上(ok2)優先。
     const sts = [...activeSlots].map((s) => day[s] || "none");
+    if (sts.includes("ok2")) return "ok2";
     if (sts.includes("ok")) return "ok";
     if (sts.includes("full")) return "full";
     if (sts.includes("closed")) return "closed";
@@ -1189,12 +1191,13 @@ function initCalendar() {
   }
   // 「すべて」表示で、その時間帯に空いている体育館の数を数える
   function okCountAll(dateStr) {
-    return (data.gyms || []).reduce((n, g) => n + (gymStatusAt(g, dateStr) === "ok" ? 1 : 0), 0);
+    return (data.gyms || []).reduce((n, g) => n + (isOk(gymStatusAt(g, dateStr)) ? 1 : 0), 0);
   }
   function statusFor(dateStr) {
-    // 「すべて」のときは、いずれかの体育館が空いていれば ○ にする
+    // 「すべて」のときは、いずれかの体育館が空いていれば ○（2面以上があれば ◎）
     if (activeGym === "all") {
       const sts = (data.gyms || []).map((g) => gymStatusAt(g, dateStr));
+      if (sts.includes("ok2")) return "ok2";
       if (sts.includes("ok")) return "ok";
       if (sts.includes("full")) return "full";
       if (sts.includes("closed")) return "closed";
@@ -1235,7 +1238,7 @@ function initCalendar() {
       mark.textContent = MARK[status] || "–";
       cell.append(num, mark);
       // 「すべて」表示で2館以上空いている日は、空き館数をバッジで出す
-      if (activeGym === "all" && status === "ok") {
+      if (activeGym === "all" && isOk(status)) {
         const count = okCountAll(dateStr);
         if (count >= 2) {
           const badge = document.createElement("span");
@@ -1282,7 +1285,7 @@ function initCalendar() {
   }
   // 選択中の時間帯のどれかに空きがあるか
   function hasOkSelected(gym, dateStr) {
-    return gymStatusAt(gym, dateStr) === "ok";
+    return isOk(gymStatusAt(gym, dateStr));
   }
   function renderDetail(dateStr) {
     if (!detailEl) return;
