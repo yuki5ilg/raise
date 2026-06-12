@@ -199,6 +199,9 @@ export default {
           sha
         );
         return json({ ok: true });
+      }
+
+      // ===== 写真の削除（gallery.json から消し、画像ファイルも消す）=====
       if (url.pathname === "/delete-photo") {
         const src = String(body.src || "").trim();
         if (!src) return json({ error: "srcがありません" }, 400);
@@ -221,7 +224,8 @@ export default {
       }
 
       // ===== 写真の名前(alt)を変更 =====
-      if (url.pathname === "/update-photo") {        const src = String(body.src || "").trim();
+      if (url.pathname === "/update-photo") {
+        const src = String(body.src || "").trim();
         const alt = String(body.alt || "").trim();
         if (!src) return json({ error: "srcがありません" }, 400);
         const { sha, text } = await getFile("data/gallery.json");
