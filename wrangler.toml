@@ -1,0 +1,16 @@
+# Cloudflare Worker のデプロイ設定（GitHub連携での自動デプロイ用）
+#
+# このファイルがあると、Cloudflare の Workers Builds が push のたびに
+# worker/worker.js を自動でデプロイします（毎回コードを貼り付ける必要なし）。
+#
+# 設定方法は worker/README.md の「GitHub連携で自動デプロイする場合」を参照。
+#
+# 注意:
+#  - 秘密の値（GITHUB_TOKEN など）はこのファイルに書かない。
+#    公開リポジトリなので漏れます。必ず Cloudflare ダッシュボードの
+#    Settings → Variables and Secrets に Secret として登録してください。
+#  - REPO は worker.js 側で既定が "yuki5ilg/raise" なので未設定でOK。
+
+name = "raise-upload"
+main = "worker/worker.js"
+compatibility_date = "2025-01-01"
