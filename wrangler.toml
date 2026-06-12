@@ -11,6 +11,6 @@
 #    Settings → Variables and Secrets に Secret として登録してください。
 #  - REPO は worker.js 側で既定が "yuki5ilg/raise" なので未設定でOK。
 
-name = "raise-upload"
+name = "raise"
 main = "worker/worker.js"
 compatibility_date = "2025-01-01"
