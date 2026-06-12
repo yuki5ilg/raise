@@ -4,13 +4,15 @@
  * サイトの「＋動画を追加する」「＋写真を追加する」フォームから受け取った内容を
  * GitHub リポジトリに自動コミットする。
  *
- *   POST /add-videos  { pass, videos: [{ title, url }, ...] }
- *     → data/videos.json に追記してコミット
- *   POST /add-photos  { pass, photos: [{ name, data(base64 jpeg) }, ...] }
- *     → images/gallery/ に画像を保存し data/gallery.json に追記してコミット
+ *   POST /add-videos   { videos: [{ title, url }, ...] }       … 非公開動画を追記
+ *   POST /add-photos   { photos: [{ name, data(base64 jpeg) }] } … 写真を保存・追記
+ *   POST /delete-video { pass, url }   … 非公開動画を削除（要 DELETE_PASS）
+ *   POST /delete-photo { pass, src }   … 写真を削除（要 DELETE_PASS）
+ *   POST /put-vault    { pass, content } … 限定公開(private.enc)を保存（要 DELETE_PASS）
  *
  * 環境変数（Workerの Settings → Variables で設定）:
  *   GITHUB_TOKEN   … Fine-grained PAT（対象リポジトリの Contents: Read and write）※必須・Secret推奨
+ *   DELETE_PASS    … 削除・限定公開保存に必要な数字パスワード（限定公開の復号番号と揃える。例 3810）
  *   REPO           … 省略可。既定 "yuki5ilg/raise"
  *   ALLOWED_ORIGIN … 省略可。CORSで許可するオリジン。未設定なら "*"（どこからでも許可）
  */
@@ -38,6 +40,14 @@ export default {
       return json({ error: "JSONが不正です" }, 400);
     }
     const repo = env.REPO || "yuki5ilg/raise";
+    // 削除など破壊的操作は数字パスワード(DELETE_PASS)で保護する。
+    // 限定公開(private.enc)の保存も同じ番号で守る（復号番号3810と揃える運用）。
+    const passOk = !!env.DELETE_PASS && String(body.pass || "") === String(env.DELETE_PASS);
+    const denyPass = () =>
+      json(
+        { error: env.DELETE_PASS ? "パスワードが違います" : "削除用パスワード(DELETE_PASS)が未設定です" },
+        403
+      );
     // トークンの前後に空白/改行が混ざると "Bad credentials" になるので落とす
     const token = (env.GITHUB_TOKEN || "").trim();
     if (!token) return json({ error: "GITHUB_TOKEN が未設定です" }, 500);
@@ -85,6 +95,20 @@ export default {
         throw new Error(e.message || `GitHub書き込み失敗: ${path}`);
       }
       return res.json();
+    };
+    const deleteFile = async (path, message) => {
+      const res = await gh(`contents/${path}`);
+      if (res.status === 404) return; // すでに無い
+      if (!res.ok) throw new Error(`GitHub読み取り失敗(${res.status}): ${path}`);
+      const data = await res.json();
+      const del = await gh(`contents/${path}`, {
+        method: "DELETE",
+        body: JSON.stringify({ message, sha: data.sha }),
+      });
+      if (!del.ok && del.status !== 404) {
+        const e = await del.json().catch(() => ({}));
+        throw new Error(e.message || `GitHub削除失敗: ${path}`);
+      }
     };
 
     const url = new URL(request.url);
@@ -142,6 +166,64 @@ export default {
           sha
         );
         return json({ ok: true, added: saved.length });
+      }
+
+      // ===== 動画の削除（非公開：videos.json から url で消す）=====
+      if (url.pathname === "/delete-video") {
+        if (!passOk) return denyPass();
+        const vurl = String(body.url || "").trim();
+        if (!vurl) return json({ error: "urlがありません" }, 400);
+        const { sha, text } = await getFile("data/videos.json");
+        const data = text ? JSON.parse(text) : { videos: [] };
+        const before = (data.videos || []).length;
+        data.videos = (data.videos || []).filter((v) => v.url !== vurl);
+        if (data.videos.length === before) return json({ error: "該当する動画が見つかりません" }, 404);
+        await putFile(
+          "data/videos.json",
+          b64encode(JSON.stringify(data, null, 2) + "\n"),
+          `chore: 動画を削除 [skip ci]`,
+          sha
+        );
+        return json({ ok: true });
+      }
+
+      // ===== 写真の削除（gallery.json から消し、画像ファイルも消す）=====
+      if (url.pathname === "/delete-photo") {
+        if (!passOk) return denyPass();
+        const src = String(body.src || "").trim();
+        if (!src) return json({ error: "srcがありません" }, 400);
+        const { sha, text } = await getFile("data/gallery.json");
+        const data = text ? JSON.parse(text) : { photos: [] };
+        const before = (data.photos || []).length;
+        data.photos = (data.photos || []).filter((p) => p.src !== src);
+        if (data.photos.length === before) return json({ error: "該当する写真が見つかりません" }, 404);
+        await putFile(
+          "data/gallery.json",
+          b64encode(JSON.stringify(data, null, 2) + "\n"),
+          `chore: ギャラリー写真を削除 [skip ci]`,
+          sha
+        );
+        // 画像ファイル本体も削除（アップロードした images/gallery/ 配下のみ）
+        if (/^images\/gallery\//.test(src)) {
+          try { await deleteFile(src, `chore: ギャラリー画像を削除 [skip ci]`); } catch (_) {}
+        }
+        return json({ ok: true });
+      }
+
+      // ===== 限定公開動画の保存（暗号化済みblobをそのままコミット）=====
+      // クライアント側で復号→追加/削除→再暗号化した private.enc の中身(base64文字列)を受け取る。
+      if (url.pathname === "/put-vault") {
+        if (!passOk) return denyPass();
+        const content = String(body.content || "");
+        if (!content) return json({ error: "contentがありません" }, 400);
+        const { sha } = await getFile("data/private.enc");
+        await putFile(
+          "data/private.enc",
+          b64encode(content),
+          `chore: 限定公開動画を更新 [skip ci]`,
+          sha
+        );
+        return json({ ok: true });
       }
 
       return json({ error: "不明なエンドポイント" }, 404);

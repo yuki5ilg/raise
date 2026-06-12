@@ -248,9 +248,14 @@
       <div class="uploader reveal" id="videoUploader">
         <button type="button" class="uploader__toggle" id="videoUpToggle" aria-expanded="false">＋ 動画を追加する</button>
         <form class="uploader__form" id="videoUpForm" hidden>
+          <div class="uploader__type" role="radiogroup" aria-label="動画の種類">
+            <label><input type="radio" name="videoType" value="private" checked /> 非公開（YouTubeで再生）</label>
+            <label><input type="radio" name="videoType" value="unlisted" /> 限定公開（サイト内で再生）</label>
+          </div>
           <div class="uploader__rows" id="videoRows"></div>
           <button type="button" class="uploader__addrow" id="videoAddRow">＋ 行を追加</button>
           <div class="uploader__foot">
+            <input type="password" id="videoVaultPass" class="is-hidden" placeholder="動画用パスワード（数字）" inputmode="numeric" pattern="[0-9]*" autocomplete="off" aria-label="動画用パスワード（数字）" />
             <button type="submit" class="btn btn--primary">登録する</button>
           </div>
           <p class="uploader__msg" id="videoMsg" role="status"></p>

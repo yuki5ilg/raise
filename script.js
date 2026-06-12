@@ -187,6 +187,60 @@ function initSite() {
   initUpload();
 }
 
+// ===== アップロードAPI（Cloudflare Worker）共通 =====
+let UPLOAD_API = "";
+function apiUrl(path) {
+  return UPLOAD_API ? UPLOAD_API.replace(/\/$/, "") + path : "";
+}
+// 削除は数字パスワードで保護。直前に使った番号を覚えて、続けて消すとき入力を省く。
+let lastDeletePass = "";
+function askDeletePass() {
+  const p = prompt("削除用の数字パスワードを入力してね", lastDeletePass);
+  if (p === null) return null; // キャンセル
+  lastDeletePass = p;
+  return p;
+}
+
+// 写真を削除（gallery.json と画像ファイル）。成功したら figure をDOMから消す。
+async function deletePhoto(photo, fig) {
+  if (!apiUrl("/delete-photo")) { alert("アップロードAPIが未設定です"); return; }
+  if (!confirm("この写真を削除する？")) return;
+  const pass = askDeletePass();
+  if (pass === null) return;
+  try {
+    const res = await fetch(apiUrl("/delete-photo"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pass, src: photo.src }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.error || "削除に失敗しました");
+    fig.remove();
+  } catch (e) {
+    alert(e.message || "削除に失敗しました");
+  }
+}
+
+// 非公開動画を削除（videos.json）。成功したら row をDOMから消す。
+async function deletePublicVideo(video, row) {
+  if (!apiUrl("/delete-video")) { alert("アップロードAPIが未設定です"); return; }
+  if (!confirm(`「${video.title || "この動画"}」を削除する？`)) return;
+  const pass = askDeletePass();
+  if (pass === null) return;
+  try {
+    const res = await fetch(apiUrl("/delete-video"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pass, url: video.url }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(j.error || "削除に失敗しました");
+    row.remove();
+  } catch (e) {
+    alert(e.message || "削除に失敗しました");
+  }
+}
+
 // ===== ギャラリー =====
 // data/gallery.json があればそこから描画（追加機能の反映先）。
 // 無ければHTMLに書かれた初期の4枚をそのまま使う。
@@ -209,6 +263,16 @@ function initGallery() {
       img.alt = p.alt || "";
       img.loading = "lazy";
       fig.appendChild(img);
+      // アップロードした写真（images/gallery/配下）には削除ボタンを付ける
+      if (/^images\/gallery\//.test(p.src || "")) {
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "gallery__del";
+        del.setAttribute("aria-label", "この写真を削除");
+        del.textContent = "×";
+        del.addEventListener("click", (e) => { e.stopPropagation(); deletePhoto(p, fig); });
+        fig.appendChild(del);
+      }
       grid.appendChild(fig);
     });
     collect();
@@ -351,7 +415,7 @@ function initUpload() {
   let api = "";
   fetch("data/config.json", { cache: "no-store" })
     .then((res) => (res.ok ? res.json() : {}))
-    .then((cfg) => { api = (cfg && cfg.uploadApi) || ""; })
+    .then((cfg) => { api = (cfg && cfg.uploadApi) || ""; UPLOAD_API = api; })
     .catch(() => {});
 
   const needSetup = (msgEl) => {
@@ -394,6 +458,13 @@ function initUpload() {
     addRow();
     document.getElementById("videoAddRow").addEventListener("click", addRow);
 
+    // 種類（非公開/限定公開）の切替。限定公開のときだけパスワード欄を出す。
+    const vaultPassEl = document.getElementById("videoVaultPass");
+    const currentType = () => videoForm.querySelector('input[name="videoType"]:checked').value;
+    const syncType = () => vaultPassEl.classList.toggle("is-hidden", currentType() !== "unlisted");
+    videoForm.querySelectorAll('input[name="videoType"]').forEach((r) => r.addEventListener("change", syncType));
+    syncType();
+
     videoForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (needSetup(msg)) return;
@@ -405,6 +476,41 @@ function initUpload() {
         .filter((v) => v.url);
       if (!items.length) { msg.textContent = "URLを入力してね"; return; }
       if (items.some((v) => !youTubeId(v.url))) { msg.textContent = "YouTubeのURLじゃないみたい…確認してね"; return; }
+
+      // --- 限定公開：暗号化保管庫(private.enc)に追記 ---
+      if (currentType() === "unlisted") {
+        const password = vaultPassEl.value.trim();
+        if (!/^\d+$/.test(password)) { msg.textContent = "動画用パスワード（数字）を入れてね"; return; }
+        msg.textContent = "登録しています…";
+        try {
+          let vault;
+          try { vault = await loadVault(password); }
+          catch { msg.textContent = "パスワードが違うか、保管庫を読めませんでした"; return; }
+          const now = new Date().toISOString();
+          let added = 0;
+          for (const v of items) {
+            if (vault.videos.some((x) => x.url === v.url)) continue;
+            vault.videos.push({ title: v.title || "タイトル未設定", url: v.url, added: now });
+            added++;
+          }
+          const content = await encryptVault(password, vault);
+          const res = await fetch(api.replace(/\/$/, "") + "/put-vault", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pass: password, content }),
+          });
+          const json = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(json.error || "登録に失敗しました");
+          msg.textContent = `${added}本 限定公開に登録したよ！反映まで1〜2分。パスワードを入れて開き直すと出るよ`;
+          rows.innerHTML = "";
+          addRow();
+        } catch (err) {
+          msg.textContent = err.message || "登録に失敗しました";
+        }
+        return;
+      }
+
+      // --- 非公開：videos.json に追記 ---
       msg.textContent = "登録しています…";
       try {
         const res = await fetch(api.replace(/\/$/, "") + "/add-videos", {
@@ -566,7 +672,7 @@ function fetchYtTitle(id) {
     .catch(() => null);
 }
 
-function renderVideos(grid, list) {
+function renderVideos(grid, list, onDelete) {
   grid.innerHTML = "";
   sortByDateDesc(list || [])
     .map((v) => ({ title: v.title || "動画", id: youTubeId(v.url), url: v.url, isPrivate: !!v.private }))
@@ -631,6 +737,17 @@ function renderVideos(grid, list) {
         row.appendChild(btn);
         row.appendChild(embed);
       }
+      // 削除ボタン（ハンドラが渡されたときだけ）
+      if (typeof onDelete === "function") {
+        row.classList.add("video-row--del");
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = "video-row__del";
+        del.setAttribute("aria-label", "この動画を削除");
+        del.textContent = "×";
+        del.addEventListener("click", (e) => { e.stopPropagation(); onDelete(v, row); });
+        row.appendChild(del);
+      }
       grid.appendChild(row);
     });
 }
@@ -647,7 +764,7 @@ function initVideos() {
             '<p class="video__empty">非公開動画は準備中です。<br />動画リンクを登録すると、ここに表示されます。</p>';
           return;
         }
-        renderVideos(grid, vids);
+        renderVideos(grid, vids, deletePublicVideo);
       })
       .catch(() => {
         grid.innerHTML = '<p class="video__empty">動画を読み込めませんでした。</p>';
@@ -673,6 +790,35 @@ async function decryptVault(password, b64) {
   );
   const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, data);
   return JSON.parse(new TextDecoder().decode(pt));
+}
+
+// 平文オブジェクトを private.enc 形式(base64: salt|iv|ciphertext)に暗号化する。decryptVaultと対。
+async function encryptVault(password, obj) {
+  const enc = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const km = await crypto.subtle.importKey(
+    "raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]
+  );
+  const key = await crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt, iterations: 200000, hash: "SHA-256" },
+    km, { name: "AES-GCM", length: 256 }, false, ["encrypt"]
+  );
+  const ct = new Uint8Array(
+    await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(JSON.stringify(obj)))
+  );
+  const out = new Uint8Array(16 + 12 + ct.length);
+  out.set(salt, 0); out.set(iv, 16); out.set(ct, 28);
+  let bin = "";
+  out.forEach((b) => (bin += String.fromCharCode(b)));
+  return btoa(bin);
+}
+
+// 現在の限定公開リストを取得（private.encが無ければ空）。パスワード違いは例外を投げる。
+async function loadVault(password) {
+  const res = await fetch("data/private.enc", { cache: "no-store" });
+  if (!res.ok) return { videos: [] };
+  return decryptVault(password, await res.text());
 }
 
 function initVault() {
@@ -702,7 +848,27 @@ function initVault() {
           msgEl.textContent = "登録されている限定動画はありません。";
           return;
         }
-        renderVideos(grid, vids);
+        // 限定公開の削除：パスワードを使って復号→該当を除外→再暗号化して保存
+        const onDelete = async (video, row) => {
+          if (!apiUrl("/put-vault")) { alert("アップロードAPIが未設定です"); return; }
+          if (!confirm(`「${video.title || "この動画"}」を削除する？`)) return;
+          try {
+            const cur = await loadVault(password);
+            cur.videos = (cur.videos || []).filter((v) => v.url !== video.url);
+            const content = await encryptVault(password, cur);
+            const res = await fetch(apiUrl("/put-vault"), {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ pass: password, content }),
+            });
+            const j = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(j.error || "削除に失敗しました");
+            row.remove();
+          } catch (e) {
+            alert(e.message || "削除に失敗しました");
+          }
+        };
+        renderVideos(grid, vids, onDelete);
       })
       .catch((err) => {
         if (err && err.message === "nofile") {

@@ -31,10 +31,11 @@ Workerの **Settings → Variables and Secrets** で追加:
 | 名前 | 値 | 種類 |
 |---|---|---|
 | `GITHUB_TOKEN` | 手順1のトークン（`github_pat_...` をそのまま。"Bearer" は付けない） | **必須・Secret（Encrypt）** |
+| `DELETE_PASS` | 削除・限定公開の保存に使う数字パスワード（限定公開の復号番号と揃える。例 `3810`） | 削除機能を使うなら必須・Secret |
 | `REPO` | `yuki5ilg/raise` | 省略可（既定値あり） |
 | `ALLOWED_ORIGIN` | サイトのオリジン（例 `https://yuki5ilg.github.io`） | 省略可（未設定なら `*`） |
 
-> 設定が必須なのは **`GITHUB_TOKEN` だけ**。`ALLOWED_ORIGIN` は無くても動きます。
+> 設定が必須なのは **`GITHUB_TOKEN`**。写真・動画の**削除**や**限定公開の登録**を使うなら **`DELETE_PASS`** も設定してね（限定公開の番号 `3810` と同じ値にするのがおすすめ）。`ALLOWED_ORIGIN` は無くても動きます。
 
 ## 4. サイトにWorkerのURLを設定する
 

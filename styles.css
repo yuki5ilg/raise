@@ -1518,10 +1518,48 @@ body {
 }
 .uploader__foot input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(189, 90, 42, 0.14); }
 .uploader__msg { font-size: 13px; color: var(--brand); min-height: 18px; margin-top: 12px; font-weight: 600; }
+
+/* 動画の種類切替（非公開／限定公開） */
+.uploader__type { display: flex; flex-wrap: wrap; gap: 10px 20px; margin-bottom: 14px; }
+.uploader__type label { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.uploader__type input { accent-color: var(--brand); }
+.is-hidden { display: none !important; }
+
 @media (max-width: 560px) {
   .uploader__row { grid-template-columns: 1fr; }
   .uploader__rowdel { justify-self: end; }
 }
+
+/* 削除ボタン（写真・動画 共通の丸い×） */
+.gallery__del,
+.video-row__del {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(20, 20, 20, 0.62);
+  color: #fff;
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+.gallery__del:hover,
+.video-row__del:hover { background: rgba(200, 50, 50, 0.92); }
+.gallery__del:active,
+.video-row__del:active { transform: scale(0.92); }
+.video-row { position: relative; }
+.video-row__del { top: 11px; background: rgba(20, 20, 20, 0.42); }
+.video-row__del:hover { background: rgba(200, 50, 50, 0.92); }
+/* 削除ボタンぶんだけ本文の右に余白を作って重ならないようにする */
+.video-row--del > .video-row__link { padding-right: 50px; }
 
 /* ===== Film grain ===== */
 .grain {
