@@ -44,11 +44,14 @@ export default {
     }
 
     const repo = env.REPO || "yuki5ilg/raise";
+    // トークンの前後に空白/改行が混ざると "Bad credentials" になるので落とす
+    const token = (env.GITHUB_TOKEN || "").trim();
+    if (!token) return json({ error: "GITHUB_TOKEN が未設定です" }, 500);
     const gh = (path, init = {}) =>
       fetch(`https://api.github.com/repos/${repo}/${path}`, {
         ...init,
         headers: {
-          Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+          Authorization: `Bearer ${token}`,
           Accept: "application/vnd.github+json",
           "User-Agent": "raise-upload-worker",
           ...(init.headers || {}),
@@ -70,7 +73,11 @@ export default {
     const getFile = async (path) => {
       const res = await gh(`contents/${path}`);
       if (res.status === 404) return { sha: undefined, text: null };
-      if (!res.ok) throw new Error(`GitHub読み取り失敗: ${path}`);
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        // GitHubの生メッセージ（例: "Bad credentials"）をそのまま見せる
+        throw new Error(`GitHub読み取り失敗(${res.status}): ${e.message || path}`);
+      }
       const data = await res.json();
       return { sha: data.sha, text: b64decode(data.content) };
     };
@@ -98,10 +105,12 @@ export default {
         const { sha, text } = await getFile("data/videos.json");
         const data = text ? JSON.parse(text) : { videos: [] };
         data.videos = data.videos || [];
+        const now = new Date().toISOString();
         for (const v of items) {
           // 同じURLは二重登録しない
           if (data.videos.some((x) => x.url === v.url)) continue;
-          data.videos.push({ title: v.title || "タイトル未設定", url: v.url, private: true });
+          // added = 登録日時（時系列の並べ替えに使う）
+          data.videos.push({ title: v.title || "タイトル未設定", url: v.url, private: true, added: now });
         }
         await putFile(
           "data/videos.json",
@@ -119,11 +128,14 @@ export default {
         if (photos.length > 20) return json({ error: "一度に登録できるのは20枚まで" }, 400);
 
         const ts = Date.now();
+        const now = new Date().toISOString();
         const saved = [];
         for (let i = 0; i < photos.length; i++) {
           const path = `images/gallery/${ts}-${i + 1}.jpeg`;
           await putFile(path, photos[i].data, `chore: ギャラリー写真を追加 [skip ci]`);
-          saved.push({ src: path, alt: String(photos[i].name || "").replace(/\.[^.]+$/, "") });
+          // taken = 写真の撮影日(EXIF・あれば) / added = アップロード日時。並べ替えに使う
+          const taken = typeof photos[i].taken === "string" ? photos[i].taken : null;
+          saved.push({ src: path, alt: String(photos[i].name || "").replace(/\.[^.]+$/, ""), taken, added: now });
         }
 
         const { sha, text } = await getFile("data/gallery.json");

@@ -201,7 +201,7 @@ function initGallery() {
 
   const render = (list) => {
     grid.innerHTML = "";
-    list.forEach((p) => {
+    sortByDateDesc(list).forEach((p) => {
       const fig = document.createElement("figure");
       fig.className = "gallery__item";
       const img = document.createElement("img");
@@ -273,6 +273,76 @@ function initGallery() {
     if (Math.abs(dx) > 48) show(cur + (dx < 0 ? 1 : -1));
     touchX = null;
   }, { passive: true });
+}
+
+// 並べ替え用：撮影日(taken) > 登録日時(added) の順で日付を取り、新しい順に並べる。
+// 日付が無いもの（初期の写真・動画）は末尾に、元の並び順を保って置く。
+function sortByDateDesc(list) {
+  const t = (x) => {
+    const d = Date.parse(x && (x.taken || x.added));
+    return isNaN(d) ? -Infinity : d;
+  };
+  return list
+    .map((item, i) => ({ item, i }))
+    .sort((a, b) => t(b.item) - t(a.item) || a.i - b.i)
+    .map((x) => x.item);
+}
+
+// JPEGのEXIFから撮影日時(DateTimeOriginal)を読み、ISO文字列で返す。無ければnull。
+// 先頭128KBだけ読むので軽い。失敗してもnullを返すだけでアップロードは止めない。
+function readExifDate(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onerror = () => resolve(null);
+    reader.onload = () => {
+      try {
+        const view = new DataView(reader.result);
+        if (view.getUint16(0) !== 0xffd8) return resolve(null); // JPEGでない
+        const len = view.byteLength;
+        let offset = 2;
+        while (offset + 4 < len) {
+          const marker = view.getUint16(offset);
+          if (marker === 0xffe1) {
+            const exifStart = offset + 4;
+            if (view.getUint32(exifStart) !== 0x45786966) return resolve(null); // "Exif"
+            const tiff = exifStart + 6;
+            const little = view.getUint16(tiff) === 0x4949;
+            const u16 = (o) => view.getUint16(o, little);
+            const u32 = (o) => view.getUint32(o, little);
+            const readStr = (o, n) => {
+              let s = "";
+              for (let j = 0; j < n; j++) s += String.fromCharCode(view.getUint8(o + j));
+              return s;
+            };
+            const findDate = (dir) => {
+              const count = u16(dir);
+              for (let i = 0; i < count; i++) {
+                const e = dir + 2 + i * 12;
+                const tag = u16(e);
+                if (tag === 0x9003 || tag === 0x0132) {
+                  return readStr(tiff + u32(e + 8), 19); // "YYYY:MM:DD HH:MM:SS"
+                }
+                if (tag === 0x8769) {
+                  const r = findDate(tiff + u32(e + 8)); // Exif サブIFD
+                  if (r) return r;
+                }
+              }
+              return null;
+            };
+            const raw = findDate(tiff + u32(tiff + 4));
+            const m = raw && raw.match(/^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2}):(\d{2})/);
+            return resolve(m ? `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}` : null);
+          }
+          if ((marker & 0xff00) !== 0xff00) break;
+          offset += 2 + view.getUint16(offset + 2);
+        }
+        resolve(null);
+      } catch {
+        resolve(null);
+      }
+    };
+    reader.readAsArrayBuffer(file.slice(0, 131072));
+  });
 }
 
 // ===== 動画・写真の追加（Cloudflare Worker 経由でリポジトリにコミット） =====
@@ -361,13 +431,13 @@ function initUpload() {
     const fileEl = document.getElementById("photoFiles");
     const prevEl = document.getElementById("photoPreviews");
     const msg = document.getElementById("photoMsg");
-    let picked = []; // { name, dataUrl }
+    let picked = []; // { name, dataUrl, taken }
 
     const resize = (file) =>
       new Promise((resolve, reject) => {
         const img = new Image();
         const url = URL.createObjectURL(file);
-        img.onload = () => {
+        img.onload = async () => {
           URL.revokeObjectURL(url);
           const max = 1600;
           const scale = Math.min(1, max / Math.max(img.width, img.height));
@@ -375,7 +445,9 @@ function initUpload() {
           canvas.width = Math.round(img.width * scale);
           canvas.height = Math.round(img.height * scale);
           canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-          resolve({ name: file.name, dataUrl: canvas.toDataURL("image/jpeg", 0.82) });
+          // 縮小すると元のEXIFは消えるので、撮影日は元ファイルから先に読む
+          const taken = await readExifDate(file).catch(() => null);
+          resolve({ name: file.name, dataUrl: canvas.toDataURL("image/jpeg", 0.82), taken });
         };
         img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("読み込めない画像があるよ")); };
         img.src = url;
@@ -411,7 +483,7 @@ function initUpload() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             pass,
-            photos: picked.map((p) => ({ name: p.name, data: p.dataUrl.split(",")[1] })),
+            photos: picked.map((p) => ({ name: p.name, data: p.dataUrl.split(",")[1], taken: p.taken || null })),
           }),
         });
         const json = await res.json().catch(() => ({}));
@@ -501,7 +573,7 @@ function fetchYtTitle(id) {
 
 function renderVideos(grid, list) {
   grid.innerHTML = "";
-  (list || [])
+  sortByDateDesc(list || [])
     .map((v) => ({ title: v.title || "動画", id: youTubeId(v.url), url: v.url, isPrivate: !!v.private }))
     .filter((v) => v.id)
     .forEach((v) => {
