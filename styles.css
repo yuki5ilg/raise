@@ -946,6 +946,23 @@ img { max-width: 100%; display: block; }
 .cal__cell--sel { outline: 2px solid var(--brand); outline-offset: 1px; }
 .cal__cell .num { color: var(--text); }
 .cal__cell--ok { background: rgba(63, 155, 107, 0.14); }
+/* 「すべて」で2館以上空いている日は、空き館数を右上にバッジ表示 */
+.cal__cell--multi { background: rgba(63, 155, 107, 0.26); }
+.cal__count {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #3f9b6b;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 16px;
+  text-align: center;
+}
 .cal__cell--few { background: rgba(217, 162, 63, 0.16); }
 .cal__cell--full { background: rgba(192, 86, 63, 0.14); }
 .cal__cell--closed { background: rgba(155, 143, 150, 0.16); }

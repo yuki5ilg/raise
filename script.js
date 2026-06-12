@@ -1165,6 +1165,10 @@ function initCalendar() {
     if (!day) return "none";
     return day[activeSlot] || "none";
   }
+  // 「すべて」表示で、その時間帯に空いている体育館の数を数える
+  function okCountAll(dateStr) {
+    return (data.gyms || []).reduce((n, g) => n + (gymStatusAt(g, dateStr) === "ok" ? 1 : 0), 0);
+  }
   function statusFor(dateStr) {
     // 「すべて」のときは、いずれかの体育館が空いていれば ○ にする
     if (activeGym === "all") {
@@ -1208,6 +1212,18 @@ function initCalendar() {
       mark.className = "mark";
       mark.textContent = MARK[status] || "–";
       cell.append(num, mark);
+      // 「すべて」表示で2館以上空いている日は、空き館数をバッジで出す
+      if (activeGym === "all" && status === "ok") {
+        const count = okCountAll(dateStr);
+        if (count >= 2) {
+          const badge = document.createElement("span");
+          badge.className = "cal__count";
+          badge.textContent = count;
+          badge.title = `${count}館 空き`;
+          cell.appendChild(badge);
+          cell.classList.add("cal__cell--multi");
+        }
+      }
       // タップでボタンがフォーカスされると、ブラウザが要素を画面内へ
       // スクロールして位置が飛ぶ。mousedown/touchの既定動作を抑えて防ぐ。
       cell.addEventListener("mousedown", (e) => e.preventDefault());
