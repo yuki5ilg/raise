@@ -56,7 +56,18 @@ ROW_ORDER = [
     "281000_002_04_01_01", "281000_002_04_03_01", "281000_002_05_01_01",
     "281000_002_06_01_01", "281000_002_07_01_01", "281000_002_08_01_01",
 ]
-NUM_WEEKS = 5  # 取得する週数（7日 × 5 = 35日先まで）
+def weeks_to_cover(today):
+    """今日から「翌々月末」までを覆うのに必要な週数を返す。
+
+    サイトは翌々月末まで枠を公開しているので、その範囲をちょうど取り切る。
+    例: 6/12 なら 8/31 まで → 必要な週数を切り上げで算出。
+    """
+    m = today.month + 3            # 翌々月の翌月（末日+1日の月）
+    y = today.year + (m - 1) // 12
+    m = (m - 1) % 12 + 1
+    end = datetime.date(y, m, 1) - datetime.timedelta(days=1)  # 翌々月末
+    days = (end - today).days + 1
+    return max(1, -(-days // 7))   # ceil(days / 7)
 
 H = {"Content-Type": "application/x-www-form-urlencoded"}
 
@@ -221,7 +232,8 @@ def main():
     merged = {g: {} for g in TARGETS}
     slot_set = set()
     week_start = today
-    for week in range(NUM_WEEKS):
+    num_weeks = weeks_to_cover(today)  # 翌々月末まで
+    for week in range(num_weeks):
         if week > 0:
             fields = calendar_form_fields(html)
             if not fields:

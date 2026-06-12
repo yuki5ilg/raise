@@ -405,13 +405,12 @@ function initUpload() {
         .filter((v) => v.url);
       if (!items.length) { msg.textContent = "URLを入力してね"; return; }
       if (items.some((v) => !youTubeId(v.url))) { msg.textContent = "YouTubeのURLじゃないみたい…確認してね"; return; }
-      const pass = document.getElementById("videoPass").value; // 任意（Worker側でパスワード未設定なら不要）
       msg.textContent = "登録しています…";
       try {
         const res = await fetch(api.replace(/\/$/, "") + "/add-videos", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pass, videos: items }),
+          body: JSON.stringify({ videos: items }),
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(json.error || "登録に失敗しました");
@@ -475,14 +474,12 @@ function initUpload() {
       e.preventDefault();
       if (needSetup(msg)) return;
       if (!picked.length) { msg.textContent = "写真を選んでね"; return; }
-      const pass = document.getElementById("photoPass").value; // 任意（Worker側でパスワード未設定なら不要）
       msg.textContent = `${picked.length}枚 アップロード中…`;
       try {
         const res = await fetch(api.replace(/\/$/, "") + "/add-photos", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            pass,
             photos: picked.map((p) => ({ name: p.name, data: p.dataUrl.split(",")[1], taken: p.taken || null })),
           }),
         });
