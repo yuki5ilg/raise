@@ -42,7 +42,39 @@ def save_state(open_set):
         f.write("\n")
 
 
+def send_line(token, text):
+    res = requests.post(
+        "https://api.line.me/v2/bot/message/broadcast",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        },
+        data=json.dumps({"messages": [{"type": "text", "text": text}]}),
+        timeout=20,
+    )
+    return res
+
+
+def run_test_notify():
+    """workflow_dispatch の test_notify=true 用。LINE接続の疎通確認。"""
+    token = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN", "").strip()
+    if not token:
+        print("LINE_CHANNEL_ACCESS_TOKEN 未設定。Secretを確認してください。", file=sys.stderr)
+        sys.exit(1)
+    now = datetime.datetime.now().strftime("%m/%d %H:%M")
+    text = f"✅ LINE接続テスト（{now}）\nこのメッセージが届けば通知設定はOK！\n21:00〜23:00に空きが出たらお知らせするよ🏸"
+    res = send_line(token, text)
+    if res.status_code != 200:
+        print(f"LINE接続テスト失敗: {res.status_code} {res.text}", file=sys.stderr)
+        sys.exit(1)
+    print("LINE接続テスト成功: 友だち全員にテストメッセージを送信しました")
+
+
 def main():
+    if os.environ.get("TEST_NOTIFY", "").lower() == "true":
+        run_test_notify()
+        return
+
     with open(AVAIL, encoding="utf-8") as f:
         data = json.load(f)
     source = data.get("source", "")
@@ -96,15 +128,7 @@ def main():
         print("LINE_CHANNEL_ACCESS_TOKEN 未設定。通知スキップ:\n" + text)
         return
 
-    res = requests.post(
-        "https://api.line.me/v2/bot/message/broadcast",
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-        },
-        data=json.dumps({"messages": [{"type": "text", "text": text}]}),
-        timeout=20,
-    )
+    res = send_line(token, text)
     if res.status_code != 200:
         # 通知失敗でワークフロー全体は落とさない（次回再試行）
         print(f"LINE通知失敗: {res.status_code} {res.text}", file=sys.stderr)
