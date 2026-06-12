@@ -16,7 +16,9 @@
 <body>
   <!-- ===== ログインゲート ===== -->
   <div id="login" class="login">
-    <div class="login__slides" aria-hidden="true">
+    <!-- 背景はギャラリーの画像をランダムに流す（JSで gallery.json から生成）。
+         下の4枚は読み込み前/失敗時のフォールバック。 -->
+    <div class="login__slides" id="loginSlides" aria-hidden="true">
       <div class="login__slide" style="background-image:url('images/photo2.jpeg')"></div>
       <div class="login__slide" style="background-image:url('images/photo5.jpeg')"></div>
       <div class="login__slide" style="background-image:url('images/photo3.jpeg')"></div>

@@ -853,5 +853,59 @@ function initCalendar() {
   });
 }
 
+// ===== ログイン背景スライドショー（ギャラリーの画像をランダムに） =====
+function initLoginSlides() {
+  const wrap = document.getElementById("loginSlides");
+  if (!wrap) return;
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  // フォールバック（読み込み前/失敗時）として現在のスライドのURLを控える
+  const fallback = Array.from(wrap.querySelectorAll(".login__slide"))
+    .map((el) => {
+      const m = /url\(['"]?(.*?)['"]?\)/.exec(el.style.backgroundImage || "");
+      return m ? m[1] : null;
+    })
+    .filter(Boolean);
+
+  const shuffle = (arr) => {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+
+  const start = (srcs) => {
+    const list = shuffle(srcs);
+    if (!list.length) return;
+    wrap.innerHTML = "";
+    const slides = list.map((src) => {
+      const div = document.createElement("div");
+      div.className = "login__slide";
+      div.style.backgroundImage = `url('${src}')`;
+      wrap.appendChild(div);
+      return div;
+    });
+    let i = 0;
+    slides[0].classList.add("is-active");
+    if (slides.length < 2) return;
+    setInterval(() => {
+      slides[i].classList.remove("is-active");
+      i = (i + 1) % slides.length;
+      slides[i].classList.add("is-active");
+    }, 6000);
+  };
+
+  fetch("data/gallery.json", { cache: "no-store" })
+    .then((res) => (res.ok ? res.json() : null))
+    .then((json) => {
+      const srcs = json && Array.isArray(json.photos) ? json.photos.map((p) => p.src).filter(Boolean) : [];
+      start(srcs.length ? srcs : fallback);
+    })
+    .catch(() => start(fallback));
+}
+
 // 起動
+initLoginSlides();
 checkAuth();

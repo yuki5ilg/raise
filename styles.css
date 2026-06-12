@@ -51,12 +51,14 @@ img { max-width: 100%; display: block; }
 .login__overlay {
   position: absolute;
   inset: 0;
+  z-index: 2;
   background:
     linear-gradient(160deg, rgba(40, 30, 20, 0.55), rgba(30, 22, 14, 0.78)),
     radial-gradient(60% 60% at 50% 30%, rgba(194, 98, 46, 0.28), transparent 70%);
 }
 .login__card {
   position: relative;
+  z-index: 3;
   width: min(100%, 380px);
   background: rgba(255, 251, 244, 0.92);
   backdrop-filter: blur(14px);
@@ -1271,19 +1273,19 @@ body {
   background-size: cover;
   background-position: center;
   opacity: 0;
+  transform: scale(1.12);
   will-change: opacity, transform;
-  animation: loginKen 28s infinite;
+  transition: opacity 1.6s ease;
 }
-.login__slide:nth-child(1) { animation-delay: 0s; }
-.login__slide:nth-child(2) { animation-delay: 7s; }
-.login__slide:nth-child(3) { animation-delay: 14s; }
-.login__slide:nth-child(4) { animation-delay: 21s; }
+/* JSで .is-active を付け替えてクロスフェード＋ゆっくりズーム */
+.login__slide.is-active {
+  opacity: 1;
+  z-index: 1;
+  animation: loginKen 8s ease-out forwards;
+}
 @keyframes loginKen {
-  0%   { opacity: 0; transform: scale(1.18); }
-  3%   { opacity: 1; }
-  22%  { opacity: 1; }
-  25%  { opacity: 0; transform: scale(1.0); }
-  100% { opacity: 0; transform: scale(1.0); }
+  from { transform: scale(1.12); }
+  to   { transform: scale(1.0); }
 }
 
 /* 円陣の写真を正方形でくり抜く */
