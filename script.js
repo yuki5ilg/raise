@@ -793,13 +793,20 @@ function initCalendar() {
       mark.className = "mark";
       mark.textContent = MARK[status] || "–";
       cell.append(num, mark);
+      // タップでボタンがフォーカスされると、ブラウザが要素を画面内へ
+      // スクロールして位置が飛ぶ。mousedown/touchの既定動作を抑えて防ぐ。
+      cell.addEventListener("mousedown", (e) => e.preventDefault());
       cell.addEventListener("click", () => {
-        // 月全体を再構築するとフォーカス喪失でスクロール位置が飛ぶため、
+        // 月全体を再構築するとスクロール位置が飛ぶため、
         // 選択クラスの付け替えと詳細の更新だけ行う
+        const keepY = window.scrollY;
         selectedDate = dateStr;
         gridEl.querySelectorAll(".cal__cell--sel").forEach((c) => c.classList.remove("cal__cell--sel"));
         cell.classList.add("cal__cell--sel");
         renderDetail(dateStr);
+        // 詳細パネルの描画でレイアウトが動いてもスクロール位置を保つ
+        window.scrollTo({ top: keepY });
+        requestAnimationFrame(() => window.scrollTo({ top: keepY }));
       });
       gridEl.appendChild(cell);
     }
