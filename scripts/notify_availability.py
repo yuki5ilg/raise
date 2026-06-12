@@ -42,6 +42,14 @@ def save_state(open_set):
         f.write("\n")
 
 
+def get_token():
+    """Secretからトークンを取得。空白や誤って付けた 'Bearer ' を除去。"""
+    token = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN", "").strip()
+    if token.lower().startswith("bearer "):
+        token = token[7:].strip()
+    return token
+
+
 def send_line(token, text):
     res = requests.post(
         "https://api.line.me/v2/bot/message/broadcast",
@@ -57,10 +65,13 @@ def send_line(token, text):
 
 def run_test_notify():
     """workflow_dispatch の test_notify=true 用。LINE接続の疎通確認。"""
-    token = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN", "").strip()
+    token = get_token()
     if not token:
         print("LINE_CHANNEL_ACCESS_TOKEN 未設定。Secretを確認してください。", file=sys.stderr)
         sys.exit(1)
+    # トークン本体は出さず、長さだけ表示（チャネルシークレット混同などの切り分け用）
+    print(f"トークン長: {len(token)} 文字（参考: チャネルシークレットなら32文字、"
+          f"アクセストークン(長期)は150文字以上が多い）")
     now = datetime.datetime.now().strftime("%m/%d %H:%M")
     text = f"✅ LINE接続テスト（{now}）\nこのメッセージが届けば通知設定はOK！\n21:00〜23:00に空きが出たらお知らせするよ🏸"
     res = send_line(token, text)
@@ -107,7 +118,7 @@ def main():
         print("新たな空きなし")
         return
 
-    token = os.environ.get("LINE_CHANNEL_ACCESS_TOKEN", "").strip()
+    token = get_token()
 
     # 日付ごとにまとめて整形
     by_date = {}
