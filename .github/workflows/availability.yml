@@ -34,12 +34,17 @@ jobs:
       - name: Scrape availability
         run: python scripts/scrape_availability.py
 
+      - name: Notify on new 21-23 availability (LINE)
+        env:
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+        run: python scripts/notify_availability.py
+
       - name: Commit if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if ! git diff --quiet data/availability.json; then
-            git add data/availability.json
+          git add data/availability.json data/notify_state_2123.json
+          if ! git diff --cached --quiet; then
             git commit -m "chore: 体育館の空き状況を更新 [skip ci]"
             git push
           else
