@@ -1,10 +1,11 @@
 name: Update gym availability
 
 # 体育館の空き状況を定期取得して data/availability.json を更新・コミットする。
+#
+# 定期実行は外部の cron-job.org が workflow_dispatch API を10分ごとに叩いて起動する。
+# GitHub内蔵の schedule は遅延・重複の原因になるため使わない（二重起動を避ける）。
 on:
-  schedule:
-    - cron: "8,23,38,53 * * * *"   # 15分ごと（混雑する0/30分を避けた分）。スキップされても次がすぐ来る
-  workflow_dispatch:        # 手動実行も可
+  workflow_dispatch:        # 外部cron(10分ごと)＆手動実行の起動口
     inputs:
       test_notify:
         description: "LINE接続テスト送信（友だち全員に検証メッセージを1通送る）"
