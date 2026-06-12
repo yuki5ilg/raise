@@ -1,4 +1,5 @@
 {
-  "_note": "uploadApi にCloudflare WorkerのURL（例: https://raise-upload.xxxx.workers.dev）を設定すると、サイトから動画・写真を追加できるようになります。手順は worker/README.md を参照。",
-  "uploadApi": "https://raise-upload.yuki5ilg.workers.dev"
+  "_note": "uploadApi にCloudflare WorkerのURL（例: https://raise-upload.xxxx.workers.dev）を設定すると、サイトから動画・写真を追加できるようになります。手順は worker/README.md を参照。lineAddUrl にLINE公式アカウントの友だち追加URL（例: https://lin.ee/xxxxxxx）を入れると、空き状況セクションに『LINEで空き通知を受け取る』ボタンが表示されます。",
+  "uploadApi": "https://raise-upload.yuki5ilg.workers.dev",
+  "lineAddUrl": ""
 }

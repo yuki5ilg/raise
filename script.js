@@ -493,7 +493,17 @@ function initUpload() {
   let api = "";
   fetch("data/config.json", { cache: "no-store" })
     .then((res) => (res.ok ? res.json() : {}))
-    .then((cfg) => { api = (cfg && cfg.uploadApi) || ""; UPLOAD_API = api; })
+    .then((cfg) => {
+      api = (cfg && cfg.uploadApi) || "";
+      UPLOAD_API = api;
+      // LINE友だち追加ボタン（lineAddUrl が設定されているときだけ表示）
+      const lb = document.getElementById("lineAddBtn");
+      const wrap = document.getElementById("calNotify");
+      if (lb && wrap && cfg && cfg.lineAddUrl) {
+        lb.href = cfg.lineAddUrl;
+        wrap.classList.remove("is-hidden");
+      }
+    })
     .catch(() => {});
 
   const needSetup = (msgEl) => {
