@@ -417,7 +417,6 @@ function initUpload() {
         msg.textContent = `${items.length}本 登録したよ！反映まで1〜2分待ってね`;
         rows.innerHTML = "";
         addRow();
-        document.getElementById("videoPass").value = "";
       } catch (err) {
         msg.textContent = err.message || "登録に失敗しました";
       }
@@ -489,7 +488,6 @@ function initUpload() {
         picked = [];
         prevEl.innerHTML = "";
         fileEl.value = "";
-        document.getElementById("photoPass").value = "";
       } catch (err) {
         msg.textContent = err.message || "アップロードに失敗しました";
       }
