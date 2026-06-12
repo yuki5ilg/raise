@@ -237,7 +237,7 @@
           </div>
         </div>
         <form class="vault__form" id="vaultForm" autocomplete="off">
-          <input type="password" id="vaultPass" placeholder="動画用パスワード" aria-label="動画用パスワード" autocomplete="off" />
+          <input type="password" id="vaultPass" placeholder="動画用パスワード（数字）" aria-label="動画用パスワード（数字）" inputmode="numeric" pattern="[0-9]*" autocomplete="off" />
           <button type="submit" class="btn btn--primary">開く</button>
         </form>
         <p class="vault__msg" id="vaultMsg" role="status"></p>
