@@ -7,6 +7,7 @@
  *   POST /add-videos   { videos: [{ title, url }, ...] }       … 非公開動画を追記
  *   POST /add-photos   { photos: [{ name, data(base64 jpeg) }] } … 写真を保存・追記
  *   POST /delete-video { url }     … 非公開動画を削除
+ *   POST /update-video { url, title }… 非公開動画の名前を変更
  *   POST /delete-photo { src }     … 写真を削除
  *   POST /update-photo { src, alt }… 写真の名前(alt)を変更
  *   POST /put-vault    { content } … 限定公開(private.enc)を保存
@@ -181,7 +182,23 @@ export default {
         return json({ ok: true });
       }
 
-      // ===== 写真の削除（gallery.json から消し、画像ファイルも消す）=====
+      // ===== 動画の名前(title)を変更（非公開）=====
+      if (url.pathname === "/update-video") {
+        const vurl = String(body.url || "").trim();
+        const title = String(body.title || "").trim();
+        if (!vurl) return json({ error: "urlがありません" }, 400);
+        const { sha, text } = await getFile("data/videos.json");
+        const data = text ? JSON.parse(text) : { videos: [] };
+        let found = false;
+        (data.videos || []).forEach((v) => { if (v.url === vurl) { v.title = title; found = true; } });
+        if (!found) return json({ error: "該当する動画が見つかりません" }, 404);
+        await putFile(
+          "data/videos.json",
+          b64encode(JSON.stringify(data, null, 2) + "\n"),
+          `chore: 動画の名前を変更 [skip ci]`,
+          sha
+        );
+        return json({ ok: true });
       if (url.pathname === "/delete-photo") {
         const src = String(body.src || "").trim();
         if (!src) return json({ error: "srcがありません" }, 400);
@@ -204,8 +221,7 @@ export default {
       }
 
       // ===== 写真の名前(alt)を変更 =====
-      if (url.pathname === "/update-photo") {
-        const src = String(body.src || "").trim();
+      if (url.pathname === "/update-photo") {        const src = String(body.src || "").trim();
         const alt = String(body.alt || "").trim();
         if (!src) return json({ error: "srcがありません" }, 400);
         const { sha, text } = await getFile("data/gallery.json");

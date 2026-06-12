@@ -199,10 +199,10 @@
         </figure>
       </div>
 
-      <!-- 写真の追加（メンバー用） -->
-      <div class="uploader reveal" id="photoUploader">
-        <button type="button" class="uploader__toggle" id="photoUpToggle" aria-expanded="false">＋ 写真を追加する</button>
-        <form class="uploader__form" id="photoUpForm" hidden>
+      <!-- 写真の追加（編集モード内に表示） -->
+      <div class="uploader reveal is-hidden" id="photoUploader">
+        <p class="uploader__title">写真を追加</p>
+        <form class="uploader__form" id="photoUpForm">
           <label class="uploader__drop" id="photoDrop">
             <input type="file" id="photoFiles" accept="image/*" multiple hidden />
             <span>タップして写真を選択（複数OK）</span>
@@ -223,6 +223,11 @@
         <h2 class="section__title">練習動画</h2>
         <p class="section__desc">非公開動画はYouTubeでログインして再生、限定公開動画はパスワードを入れたら見られます。</p>
       </div>
+
+      <div class="gallery-tools reveal">
+        <button type="button" class="btn btn--ghost" id="videoEditToggle">動画を編集</button>
+      </div>
+      <p class="gallery-tools__hint is-hidden" id="videoEditHint">名前を直すと「編集をやめる」で保存・×で削除。下のフォームから追加もできるよ</p>
 
       <!-- 非公開動画（🔒・YouTubeで再生） -->
       <div class="vault reveal">
@@ -253,10 +258,10 @@
         <div class="video-list" id="vaultGrid"></div>
       </div>
 
-      <!-- 動画の追加（メンバー用） -->
-      <div class="uploader reveal" id="videoUploader">
-        <button type="button" class="uploader__toggle" id="videoUpToggle" aria-expanded="false">＋ 動画を追加する</button>
-        <form class="uploader__form" id="videoUpForm" hidden>
+      <!-- 動画の追加（編集モード内に表示） -->
+      <div class="uploader reveal is-hidden" id="videoUploader">
+        <p class="uploader__title">動画を追加</p>
+        <form class="uploader__form" id="videoUpForm">
           <div class="uploader__type" role="radiogroup" aria-label="動画の種類">
             <label><input type="radio" name="videoType" value="private" checked /> 非公開（YouTubeで再生）</label>
             <label><input type="radio" name="videoType" value="unlisted" /> 限定公開（サイト内で再生）</label>
