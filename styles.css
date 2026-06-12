@@ -948,8 +948,10 @@ img { max-width: 100%; display: block; }
 .cal__cell .num { color: var(--text); }
 .cal__cell--ok { background: rgba(63, 155, 107, 0.14); }
 /* 2面以上の空き（◎）はより濃い緑で強調 */
-.cal__cell--ok2 { background: rgba(63, 155, 107, 0.30); }
-.cal__cell--ok2 .mark { color: #2f8d5e; font-weight: 800; }
+.cal__cell--ok2,
+.cal__cell--ok3 { background: rgba(63, 155, 107, 0.30); }
+.cal__cell--ok2 .mark,
+.cal__cell--ok3 .mark { color: #2f8d5e; font-weight: 800; }
 /* 「すべて」で2館以上空いている日は、空き館数を右上にバッジ表示 */
 .cal__cell--multi { background: rgba(63, 155, 107, 0.26); }
 .cal__count {
@@ -1018,8 +1020,10 @@ img { max-width: 100%; display: block; }
 .cal__slotrow .mark { font-size: 13px; }
 .cal__slotrow--ok { background: rgba(63, 155, 107, 0.12); }
 .cal__slotrow--ok .mark { color: #3f9b6b; }
-.cal__slotrow--ok2 { background: rgba(63, 155, 107, 0.22); }
-.cal__slotrow--ok2 .mark { color: #2f8d5e; font-weight: 800; }
+.cal__slotrow--ok2,
+.cal__slotrow--ok3 { background: rgba(63, 155, 107, 0.22); }
+.cal__slotrow--ok2 .mark,
+.cal__slotrow--ok3 .mark { color: #2f8d5e; font-weight: 800; }
 .cal__slotrow--full { color: var(--muted); }
 .cal__slotrow--full .mark { color: #c0563f; }
 .cal__slotrow--closed { color: var(--muted); }
@@ -1369,31 +1373,24 @@ body {
 
 /* ===== Gallery: マソンリーをやめてモザイクグリッドに（チラつき解消） ===== */
 .gallery-grid {
-  column-count: unset;
-  column-gap: unset;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: clamp(64px, 9vw, 96px);
-  grid-auto-flow: dense;
-  gap: 14px;
+  column-count: 3;
+  column-gap: 14px;
   max-width: 860px;
   margin: 0 auto;
 }
 .gallery__item {
-  margin: 0;
-  grid-column: span 2;
-  grid-row: span 3;
+  margin: 0 0 14px;
+  break-inside: avoid;
   border-radius: 18px;
   overflow: hidden;
   box-shadow: var(--shadow-soft);
   cursor: zoom-in;
   position: relative;
 }
-.gallery__item:nth-child(3n + 1) { grid-row: span 4; }
+/* 写真は自然な縦横比で全体表示（横長でも切れない） */
 .gallery__item img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
   display: block;
   transition: transform 0.8s var(--ease);
 }
@@ -1412,7 +1409,8 @@ body {
   .gallery__item:hover::after { opacity: 1; }
 }
 @media (max-width: 560px) {
-  .gallery-grid { grid-auto-rows: clamp(52px, 13vw, 72px); gap: 10px; }
+  .gallery-grid { column-count: 2; column-gap: 10px; }
+  .gallery__item { margin-bottom: 10px; }
 }
 
 /* ===== Lightbox ===== */

@@ -102,7 +102,7 @@ def main():
             except ValueError:
                 continue
             st = slots.get(SLOT)
-            if d >= today and st in ("ok", "ok2"):
+            if d >= today and st in ("ok", "ok2", "ok3"):
                 key = f"{date_str}|{name}"
                 cur.add(key)
                 status_of[key] = st
@@ -126,18 +126,18 @@ def main():
 
     # 「日付 → 体育館 → 時間」の順で1件ずつ、ポップに整形
     slot_disp = SLOT.replace("～", "〜")
+    face = {"ok2": "2面", "ok3": "3面以上"}  # 複数面のときに付けるラベル
     items = []
     for item in new:
         ds, nm = item.split("|", 1)
         d = datetime.date.fromisoformat(ds)
-        two = status_of.get(item) == "ok2"  # 2面以上空き
-        items.append((d, nm.replace("体育館", ""), two))
+        items.append((d, nm.replace("体育館", ""), face.get(status_of.get(item), "")))
     items.sort(key=lambda x: (x[0], x[1]))
 
     lines = ["📢 体育館に空きが出たよ〜！🏸", ""]
-    for d, nm, two in items:
-        tag = "　✨2面以上" if two else ""
-        lines.append(f"🗓 {d.month}/{d.day}({WD[d.weekday()]})　🏟 {nm}　⏰ {slot_disp}{tag}")
+    for d, nm, tag in items:
+        suffix = f"　✨{tag}" if tag else ""
+        lines.append(f"🗓 {d.month}/{d.day}({WD[d.weekday()]})　🏟 {nm}　⏰ {slot_disp}{suffix}")
     lines.append("")
     lines.append("お早めにどうぞ〜！🙌")
     if source:

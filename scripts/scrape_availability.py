@@ -233,23 +233,30 @@ def reach_with_retry(today):
     return None, None
 
 
-def walk_weeks(session, html, today, num_weeks, mensu):
-    """到達済みページ(html, 面数01)から、指定面数で全週を走査する。
-    {施設名: {date: {slot: free/booked/closed}}} を返す。"""
-    if mensu != "01":
-        html = calendar_post(session, html, "ChangeMensu", mensu)  # 先頭週を面数切替
-    result = {g: {} for g in TARGETS}
+MENSUS = ("01", "02", "03")  # 1面以上 / 2面以上 / 3面以上 を調べる
+
+
+def walk_weeks_multi(session, html, today, num_weeks):
+    """到達済みページ(html, 面数01)から、各週で面数1/2/3を切り替えて走査する。
+    1回の到達(=1セッション)で済ませる（面数はサーバー保持・OffsetNextに引き継がれる）。
+    返り値: {面数: {施設名: {date: {slot: free/booked/closed}}}}
+    """
+    result = {m: {g: {} for g in TARGETS} for m in MENSUS}
     week_start = today
     for week in range(num_weeks):
         if week > 0:
             if not calendar_form_fields(html):
                 break
-            html = calendar_post(session, html, "OffsetNext", mensu)  # 面数は保持される
+            html = calendar_post(session, html, "OffsetNext", "01")  # 翌週へ
             week_start = today + datetime.timedelta(days=7 * week)
             time.sleep(1)  # 行儀よく
-        for gym, days in parse_week(html, week_start).items():
-            for d, slots in days.items():
-                result[gym].setdefault(d, {}).update(slots)
+        page = html
+        for m in MENSUS:
+            page = calendar_post(session, html, "ChangeMensu", m)  # この週を面数mで表示
+            for gym, days in parse_week(page, week_start).items():
+                for d, slots in days.items():
+                    result[m][gym].setdefault(d, {}).update(slots)
+        html = page  # 最後(面数03)の状態。次のOffsetNextはこれを起点にする
     return result
 
 
@@ -269,16 +276,14 @@ def main():
         print("NOTICE: 空き状況ページに到達できませんでした。今回は更新をスキップします（サイト停止中の可能性）。")
         return
 
-    # パス1: 面数1（=1面以上の空き）で全週を取得
-    free1 = walk_weeks(session, html, today, num_weeks, "01")
+    # 1セッションで各週を面数1/2/3で走査（free[面数][施設][日][時間帯]=free/booked/closed）
+    free = walk_weeks_multi(session, html, today, num_weeks)
+    free1, free2, free3 = free["01"], free["02"], free["03"]
 
-    # パス2: 別セッションで到達し直し、面数2（=2面以上の空き）で全週を取得。
-    # 面数はサーバー側で保持されるため、ここは独立した走査にする。失敗しても致命ではない
-    # （2面情報なしで通常表示に落とす）。
-    session2, html2 = reach_with_retry(today)
-    free2 = walk_weeks(session2, html2, today, num_weeks, "02") if html2 else {}
+    def is_free(fr, name, d, slot):
+        return fr.get(name, {}).get(d, {}).get(slot) == "free"
 
-    # 突き合わせ: 1面以上の空き=ok、うち2面以上も空き=ok2
+    # 突き合わせ: 1面=ok / 2面=ok2 / 3面以上=ok3
     slot_set = set()
     gyms = []
     for name in TARGETS:
@@ -288,8 +293,12 @@ def main():
             for slot, raw in sorted(slots.items()):
                 slot_set.add(slot)
                 if raw == "free":
-                    has2 = free2.get(name, {}).get(d, {}).get(slot) == "free"
-                    row[slot] = "ok2" if has2 else "ok"
+                    if is_free(free3, name, d, slot):
+                        row[slot] = "ok3"
+                    elif is_free(free2, name, d, slot):
+                        row[slot] = "ok2"
+                    else:
+                        row[slot] = "ok"
                 else:
                     row[slot] = RAW2UI[raw]
             dates[d] = row
@@ -299,7 +308,7 @@ def main():
         "updated": datetime.datetime.now(
             datetime.timezone(datetime.timedelta(hours=9))).isoformat(timespec="minutes"),
         "source": f"{BASE}/yoyaku/ShisetsuMultiSelect.cgi",
-        "note": "あじさいネット（神戸市 施設予約）の空き状況照会より自動取得。◎=2面以上空き ○=空き ×=予約済み 休=休館。実際の予約は公式サイトで。",
+        "note": "あじさいネット（神戸市 施設予約）の空き状況照会より自動取得。ok=1面 ok2=2面 ok3=3面以上 / full=予約済み closed=休館。実際の予約は公式サイトで。",
         "slots": sorted(slot_set),  # 時間帯一覧（"09:00～11:00" ... "21:00～23:00"）
         "gyms": gyms,
     }

@@ -1090,9 +1090,10 @@ function initCalendar() {
   const updatedEl = document.getElementById("calUpdated");
   const sourceEl = document.getElementById("calSource");
 
-  const MARK = { ok2: "◎", ok: "○", full: "×", closed: "休" };
-  const LABEL = { ok2: "空き(2面以上)", ok: "空き", full: "予約済み", closed: "休館", none: "情報なし" };
-  const isOk = (st) => st === "ok" || st === "ok2"; // 空き（1面以上）判定
+  const MARK = { ok3: "◎", ok2: "◎", ok: "○", full: "×", closed: "休" };
+  const LABEL = { ok3: "空き(3面以上)", ok2: "空き(2面)", ok: "空き", full: "予約済み", closed: "休館", none: "情報なし" };
+  const FACE = { ok: "1面", ok2: "2面", ok3: "3面以上" }; // カードで「何面空き」を出す
+  const isOk = (st) => st === "ok" || st === "ok2" || st === "ok3"; // 空き（1面以上）判定
   const today = new Date();
   let data = null;
   let activeGym = "all"; // "all" または gyms のインデックス
@@ -1183,6 +1184,7 @@ function initCalendar() {
     if (!day) return "none";
     // 選択中の時間帯のうち、どれかが空いていれば ok（複数選択対応）。2面以上(ok2)優先。
     const sts = [...activeSlots].map((s) => day[s] || "none");
+    if (sts.includes("ok3")) return "ok3";
     if (sts.includes("ok2")) return "ok2";
     if (sts.includes("ok")) return "ok";
     if (sts.includes("full")) return "full";
@@ -1197,6 +1199,7 @@ function initCalendar() {
     // 「すべて」のときは、いずれかの体育館が空いていれば ○（2面以上があれば ◎）
     if (activeGym === "all") {
       const sts = (data.gyms || []).map((g) => gymStatusAt(g, dateStr));
+      if (sts.includes("ok3")) return "ok3";
       if (sts.includes("ok2")) return "ok2";
       if (sts.includes("ok")) return "ok";
       if (sts.includes("full")) return "full";
@@ -1274,7 +1277,8 @@ function initCalendar() {
     (data.slots || []).forEach((slot) => {
       const st = (day && day[slot]) || "none";
       const sel = activeSlots.has(slot) ? " cal__slotrow--sel" : "";
-      html += `<li class="cal__slotrow cal__slotrow--${st}${sel}"><span>${slot}</span><span class="mark">${MARK[st] || "–"} ${LABEL[st]}</span></li>`;
+      const label = FACE[st] ? `${FACE[st]} 空き` : LABEL[st]; // 空きは「○面 空き」、他はそのまま
+      html += `<li class="cal__slotrow cal__slotrow--${st}${sel}"><span>${slot}</span><span class="mark">${MARK[st] || "–"} ${label}</span></li>`;
     });
     return html + "</ul>";
   }
