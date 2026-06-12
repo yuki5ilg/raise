@@ -8,6 +8,7 @@
  *   POST /add-photos   { photos: [{ name, data(base64 jpeg) }] } … 写真を保存・追記
  *   POST /delete-video { url }     … 非公開動画を削除
  *   POST /delete-photo { src }     … 写真を削除
+ *   POST /update-photo { src, alt }… 写真の名前(alt)を変更
  *   POST /put-vault    { content } … 限定公開(private.enc)を保存
  *
  * 削除や限定公開の保護は「ブラウザ側で 3810 で private.enc を復号できるか」で行う
@@ -199,6 +200,25 @@ export default {
         if (/^images\/gallery\//.test(src)) {
           try { await deleteFile(src, `chore: ギャラリー画像を削除 [skip ci]`); } catch (_) {}
         }
+        return json({ ok: true });
+      }
+
+      // ===== 写真の名前(alt)を変更 =====
+      if (url.pathname === "/update-photo") {
+        const src = String(body.src || "").trim();
+        const alt = String(body.alt || "").trim();
+        if (!src) return json({ error: "srcがありません" }, 400);
+        const { sha, text } = await getFile("data/gallery.json");
+        const data = text ? JSON.parse(text) : { photos: [] };
+        let found = false;
+        (data.photos || []).forEach((p) => { if (p.src === src) { p.alt = alt; found = true; } });
+        if (!found) return json({ error: "該当する写真が見つかりません" }, 404);
+        await putFile(
+          "data/gallery.json",
+          b64encode(JSON.stringify(data, null, 2) + "\n"),
+          `chore: 写真の名前を変更 [skip ci]`,
+          sha
+        );
         return json({ ok: true });
       }
 

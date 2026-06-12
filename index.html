@@ -175,6 +175,15 @@
         <h2 class="section__title">ギャラリー</h2>
         <p class="section__desc">活動の様子</p>
       </div>
+      <div class="gallery-tools reveal">
+        <button type="button" class="btn btn--ghost gallery-tools__edit" id="galleryEditToggle">写真を編集</button>
+        <div class="gallery-tools__actions is-hidden" id="galleryEditActions">
+          <span class="gallery-tools__count" id="gallerySelCount">0枚選択中</span>
+          <button type="button" class="btn gallery-tools__del" id="gallerySelDelete">選択を削除</button>
+          <button type="button" class="btn btn--primary" id="galleryEditDone">完了</button>
+        </div>
+      </div>
+      <p class="gallery-tools__hint is-hidden" id="galleryEditHint">タップで選択／名前を入力して「完了」で保存</p>
       <div class="gallery-grid reveal" id="galleryGrid">
         <figure class="gallery__item">
           <img src="images/photo5.jpeg" alt="お揃いのチームTシャツで肩を組む raise のメンバー" loading="lazy" />

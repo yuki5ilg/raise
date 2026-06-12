@@ -251,18 +251,34 @@ async function deletePublicVideo(video, row) {
 // ===== ギャラリー =====
 // data/gallery.json があればそこから描画（追加機能の反映先）。
 // 無ければHTMLに書かれた初期の4枚をそのまま使う。
+// 「写真を編集」で編集モードに入ると、タップで複数選択して一括削除・名前変更ができる。
 function initGallery() {
   const grid = document.getElementById("galleryGrid");
   if (!grid) return;
-  let photos = [];
 
-  const collect = () => {
+  let photoData = null; // gallery.json の配列（無ければ null＝HTML既定の4枚）
+  let photos = [];      // ライトボックス用（表示順の {src,alt}）
+  let editing = false;
+  const selected = new Set();
+
+  const editToggle = document.getElementById("galleryEditToggle");
+  const editActions = document.getElementById("galleryEditActions");
+  const editHint = document.getElementById("galleryEditHint");
+  const selCount = document.getElementById("gallerySelCount");
+  const selDelete = document.getElementById("gallerySelDelete");
+  const editDone = document.getElementById("galleryEditDone");
+
+  const collectFromDom = () => {
     photos = Array.from(grid.querySelectorAll("img")).map((img) => ({ src: img.getAttribute("src"), alt: img.alt || "" }));
   };
+  const updateSelCount = () => { if (selCount) selCount.textContent = `${selected.size}枚選択中`; };
 
-  const render = (list) => {
+  const render = () => {
+    if (!photoData) { collectFromDom(); return; }
     grid.innerHTML = "";
-    sortByDateDesc(list).forEach((p) => {
+    const list = sortByDateDesc(photoData);
+    photos = list.map((p) => ({ src: p.src, alt: p.alt || "" }));
+    list.forEach((p) => {
       const fig = document.createElement("figure");
       fig.className = "gallery__item";
       const img = document.createElement("img");
@@ -270,29 +286,119 @@ function initGallery() {
       img.alt = p.alt || "";
       img.loading = "lazy";
       fig.appendChild(img);
-      // アップロードした写真（images/gallery/配下）には削除ボタンを付ける
-      if (/^images\/gallery\//.test(p.src || "")) {
-        const del = document.createElement("button");
-        del.type = "button";
-        del.className = "gallery__del";
-        del.setAttribute("aria-label", "この写真を削除");
-        del.textContent = "×";
-        del.addEventListener("click", (e) => { e.stopPropagation(); deletePhoto(p, fig); });
-        fig.appendChild(del);
+      if (editing) {
+        if (selected.has(p.src)) fig.classList.add("is-selected");
+        const check = document.createElement("span");
+        check.className = "gallery__check";
+        check.setAttribute("aria-hidden", "true");
+        fig.appendChild(check);
+        const name = document.createElement("input");
+        name.type = "text";
+        name.className = "gallery__name";
+        name.value = p.alt || "";
+        name.placeholder = "名前を入力";
+        name.dataset.src = p.src;
+        name.addEventListener("click", (e) => e.stopPropagation());
+        fig.appendChild(name);
+        fig.addEventListener("click", () => {
+          if (selected.has(p.src)) { selected.delete(p.src); fig.classList.remove("is-selected"); }
+          else { selected.add(p.src); fig.classList.add("is-selected"); }
+          updateSelCount();
+        });
       }
       grid.appendChild(fig);
     });
-    collect();
+  };
+
+  const setEditUI = () => {
+    selected.clear();
+    updateSelCount();
+    grid.classList.toggle("is-editing", editing);
+    if (editToggle) editToggle.textContent = editing ? "編集をやめる" : "写真を編集";
+    if (editActions) editActions.classList.toggle("is-hidden", !editing);
+    if (editHint) editHint.classList.toggle("is-hidden", !editing);
   };
 
   fetch("data/gallery.json", { cache: "no-store" })
     .then((res) => (res.ok ? res.json() : null))
     .then((json) => {
-      if (json && Array.isArray(json.photos) && json.photos.length) render(json.photos);
-      else collect();
+      if (json && Array.isArray(json.photos) && json.photos.length) {
+        photoData = json.photos.slice();
+        render();
+      } else {
+        collectFromDom();
+        if (editToggle) editToggle.style.display = "none"; // 既定写真だけなら編集不可
+      }
     })
-    .catch(collect);
-  collect();
+    .catch(collectFromDom);
+  collectFromDom();
+
+  // 編集モードの開始/終了（数字パスワードは実際の削除・保存時にだけ確認）
+  if (editToggle) {
+    editToggle.addEventListener("click", () => {
+      editing = !editing;
+      setEditUI();
+      render();
+    });
+  }
+  // 選択した写真を一括削除
+  if (selDelete) {
+    selDelete.addEventListener("click", async () => {
+      if (!selected.size) { alert("削除する写真を選んでね"); return; }
+      if (!apiUrl("/delete-photo")) { alert("アップロードAPIが未設定です"); return; }
+      if (!confirm(`${selected.size}枚を削除する？`)) return;
+      if (!(await ensureVaultKey())) return;
+      selDelete.disabled = true;
+      let ok = 0;
+      for (const src of [...selected]) {
+        try {
+          const res = await fetch(apiUrl("/delete-photo"), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ src }),
+          });
+          if (!res.ok) throw new Error();
+          photoData = photoData.filter((p) => p.src !== src);
+          selected.delete(src);
+          ok++;
+        } catch (_) {}
+      }
+      selDelete.disabled = false;
+      updateSelCount();
+      render();
+      alert(`${ok}枚 削除したよ。反映まで1〜2分。`);
+    });
+  }
+  // 完了：名前の変更を保存して編集モードを抜ける
+  if (editDone) {
+    editDone.addEventListener("click", async () => {
+      const changes = [];
+      grid.querySelectorAll(".gallery__name").forEach((inp) => {
+        const p = photoData.find((x) => x.src === inp.dataset.src);
+        const val = inp.value.trim();
+        if (p && (p.alt || "") !== val) changes.push({ p, alt: val });
+      });
+      if (changes.length) {
+        if (!apiUrl("/update-photo")) { alert("アップロードAPIが未設定です"); return; }
+        if (!(await ensureVaultKey())) return;
+        let ok = 0;
+        for (const c of changes) {
+          try {
+            const res = await fetch(apiUrl("/update-photo"), {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ src: c.p.src, alt: c.alt }),
+            });
+            if (res.ok) { c.p.alt = c.alt; ok++; }
+          } catch (_) {}
+        }
+        alert(`${ok}件 名前を更新したよ。反映まで1〜2分。`);
+      }
+      editing = false;
+      setEditUI();
+      render();
+    });
+  }
 
   // ライトボックス
   const lb = document.getElementById("lightbox");
@@ -319,6 +425,7 @@ function initGallery() {
   };
 
   grid.addEventListener("click", (e) => {
+    if (editing) return; // 編集中はタップ＝選択（ライトボックスは開かない）
     const fig = e.target.closest(".gallery__item");
     if (!fig) return;
     open(Array.from(grid.children).indexOf(fig));
@@ -571,11 +678,23 @@ function initUpload() {
         return;
       }
       prevEl.innerHTML = "";
-      picked.forEach((p) => {
+      picked.forEach((p, i) => {
+        // 名前は初期値としてファイル名（拡張子なし）を入れておく。編集可。
+        p.caption = (p.name || "").replace(/\.[^.]+$/, "");
+        const cell = document.createElement("div");
+        cell.className = "uploader__preview";
         const img = document.createElement("img");
         img.src = p.dataUrl;
-        img.alt = p.name;
-        prevEl.appendChild(img);
+        img.alt = p.caption;
+        const nm = document.createElement("input");
+        nm.type = "text";
+        nm.className = "uploader__caption";
+        nm.placeholder = "名前（任意）";
+        nm.value = p.caption;
+        nm.addEventListener("input", () => { picked[i].caption = nm.value; });
+        cell.appendChild(img);
+        cell.appendChild(nm);
+        prevEl.appendChild(cell);
       });
     });
 
@@ -589,7 +708,7 @@ function initUpload() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            photos: picked.map((p) => ({ name: p.name, data: p.dataUrl.split(",")[1], taken: p.taken || null })),
+            photos: picked.map((p) => ({ name: (p.caption || p.name || "").trim(), data: p.dataUrl.split(",")[1], taken: p.taken || null })),
           }),
         });
         const json = await res.json().catch(() => ({}));
