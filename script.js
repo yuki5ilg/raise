@@ -192,26 +192,34 @@ let UPLOAD_API = "";
 function apiUrl(path) {
   return UPLOAD_API ? UPLOAD_API.replace(/\/$/, "") + path : "";
 }
-// 削除は数字パスワードで保護。直前に使った番号を覚えて、続けて消すとき入力を省く。
-let lastDeletePass = "";
-function askDeletePass() {
-  const p = prompt("削除用の数字パスワードを入力してね", lastDeletePass);
-  if (p === null) return null; // キャンセル
-  lastDeletePass = p;
-  return p;
+// 削除の保護は「3810でprivate.encを復号できるか」で確認する（限定動画の閲覧と同じ仕組み）。
+// 一度確認できたらこのセッション中は覚えておき、続けて消すとき再入力を省く。
+// 限定欄を開いて閲覧したときも、その番号をここに覚える。
+let vaultKey = "";
+async function ensureVaultKey() {
+  if (vaultKey) return vaultKey;
+  const pw = prompt("数字パスワードを入力してね");
+  if (pw === null) return null; // キャンセル
+  try {
+    await loadVault(pw); // 復号できれば正解（private.encが無ければ素通り）
+    vaultKey = pw;
+    return pw;
+  } catch (_) {
+    alert("パスワードが違うみたい");
+    return null;
+  }
 }
 
 // 写真を削除（gallery.json と画像ファイル）。成功したら figure をDOMから消す。
 async function deletePhoto(photo, fig) {
   if (!apiUrl("/delete-photo")) { alert("アップロードAPIが未設定です"); return; }
   if (!confirm("この写真を削除する？")) return;
-  const pass = askDeletePass();
-  if (pass === null) return;
+  if (!(await ensureVaultKey())) return;
   try {
     const res = await fetch(apiUrl("/delete-photo"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pass, src: photo.src }),
+      body: JSON.stringify({ src: photo.src }),
     });
     const j = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(j.error || "削除に失敗しました");
@@ -225,13 +233,12 @@ async function deletePhoto(photo, fig) {
 async function deletePublicVideo(video, row) {
   if (!apiUrl("/delete-video")) { alert("アップロードAPIが未設定です"); return; }
   if (!confirm(`「${video.title || "この動画"}」を削除する？`)) return;
-  const pass = askDeletePass();
-  if (pass === null) return;
+  if (!(await ensureVaultKey())) return;
   try {
     const res = await fetch(apiUrl("/delete-video"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pass, url: video.url }),
+      body: JSON.stringify({ url: video.url }),
     });
     const j = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(j.error || "削除に失敗しました");
@@ -458,12 +465,8 @@ function initUpload() {
     addRow();
     document.getElementById("videoAddRow").addEventListener("click", addRow);
 
-    // 種類（非公開/限定公開）の切替。限定公開のときだけパスワード欄を出す。
-    const vaultPassEl = document.getElementById("videoVaultPass");
+    // 種類（非公開/限定公開）の切替
     const currentType = () => videoForm.querySelector('input[name="videoType"]:checked').value;
-    const syncType = () => vaultPassEl.classList.toggle("is-hidden", currentType() !== "unlisted");
-    videoForm.querySelectorAll('input[name="videoType"]').forEach((r) => r.addEventListener("change", syncType));
-    syncType();
 
     videoForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -478,9 +481,10 @@ function initUpload() {
       if (items.some((v) => !youTubeId(v.url))) { msg.textContent = "YouTubeのURLじゃないみたい…確認してね"; return; }
 
       // --- 限定公開：暗号化保管庫(private.enc)に追記 ---
+      // 暗号化に数字が要るので、限定欄を開いてあればその番号を使い、無ければ一度だけ確認する。
       if (currentType() === "unlisted") {
-        const password = vaultPassEl.value.trim();
-        if (!/^\d+$/.test(password)) { msg.textContent = "動画用パスワード（数字）を入れてね"; return; }
+        const password = await ensureVaultKey();
+        if (!password) return;
         msg.textContent = "登録しています…";
         try {
           let vault;
@@ -497,7 +501,7 @@ function initUpload() {
           const res = await fetch(api.replace(/\/$/, "") + "/put-vault", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ pass: password, content }),
+            body: JSON.stringify({ content }),
           });
           const json = await res.json().catch(() => ({}));
           if (!res.ok) throw new Error(json.error || "登録に失敗しました");
@@ -841,6 +845,7 @@ function initVault() {
       .then((b64) => decryptVault(password, b64))
       .then((json) => {
         const vids = (json.videos || []).filter((v) => youTubeId(v.url));
+        vaultKey = password; // 以後の追加・削除で再入力を省くため覚える
         msgEl.textContent = "";
         passEl.value = "";
         form.style.display = "none";
@@ -859,7 +864,7 @@ function initVault() {
             const res = await fetch(apiUrl("/put-vault"), {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ pass: password, content }),
+              body: JSON.stringify({ content }),
             });
             const j = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(j.error || "削除に失敗しました");

@@ -6,13 +6,15 @@
  *
  *   POST /add-videos   { videos: [{ title, url }, ...] }       … 非公開動画を追記
  *   POST /add-photos   { photos: [{ name, data(base64 jpeg) }] } … 写真を保存・追記
- *   POST /delete-video { pass, url }   … 非公開動画を削除（要 DELETE_PASS）
- *   POST /delete-photo { pass, src }   … 写真を削除（要 DELETE_PASS）
- *   POST /put-vault    { pass, content } … 限定公開(private.enc)を保存（要 DELETE_PASS）
+ *   POST /delete-video { url }     … 非公開動画を削除
+ *   POST /delete-photo { src }     … 写真を削除
+ *   POST /put-vault    { content } … 限定公開(private.enc)を保存
+ *
+ * 削除や限定公開の保護は「ブラウザ側で 3810 で private.enc を復号できるか」で行う
+ * （限定動画の閲覧と同じ仕組み）。Worker側に削除用パスワードは持たせない。
  *
  * 環境変数（Workerの Settings → Variables で設定）:
  *   GITHUB_TOKEN   … Fine-grained PAT（対象リポジトリの Contents: Read and write）※必須・Secret推奨
- *   DELETE_PASS    … 削除・限定公開保存に必要な数字パスワード（限定公開の復号番号と揃える。例 3810）
  *   REPO           … 省略可。既定 "yuki5ilg/raise"
  *   ALLOWED_ORIGIN … 省略可。CORSで許可するオリジン。未設定なら "*"（どこからでも許可）
  */
@@ -40,14 +42,6 @@ export default {
       return json({ error: "JSONが不正です" }, 400);
     }
     const repo = env.REPO || "yuki5ilg/raise";
-    // 削除など破壊的操作は数字パスワード(DELETE_PASS)で保護する。
-    // 限定公開(private.enc)の保存も同じ番号で守る（復号番号3810と揃える運用）。
-    const passOk = !!env.DELETE_PASS && String(body.pass || "") === String(env.DELETE_PASS);
-    const denyPass = () =>
-      json(
-        { error: env.DELETE_PASS ? "パスワードが違います" : "削除用パスワード(DELETE_PASS)が未設定です" },
-        403
-      );
     // トークンの前後に空白/改行が混ざると "Bad credentials" になるので落とす
     const token = (env.GITHUB_TOKEN || "").trim();
     if (!token) return json({ error: "GITHUB_TOKEN が未設定です" }, 500);
@@ -170,7 +164,6 @@ export default {
 
       // ===== 動画の削除（非公開：videos.json から url で消す）=====
       if (url.pathname === "/delete-video") {
-        if (!passOk) return denyPass();
         const vurl = String(body.url || "").trim();
         if (!vurl) return json({ error: "urlがありません" }, 400);
         const { sha, text } = await getFile("data/videos.json");
@@ -189,7 +182,6 @@ export default {
 
       // ===== 写真の削除（gallery.json から消し、画像ファイルも消す）=====
       if (url.pathname === "/delete-photo") {
-        if (!passOk) return denyPass();
         const src = String(body.src || "").trim();
         if (!src) return json({ error: "srcがありません" }, 400);
         const { sha, text } = await getFile("data/gallery.json");
@@ -213,7 +205,6 @@ export default {
       // ===== 限定公開動画の保存（暗号化済みblobをそのままコミット）=====
       // クライアント側で復号→追加/削除→再暗号化した private.enc の中身(base64文字列)を受け取る。
       if (url.pathname === "/put-vault") {
-        if (!passOk) return denyPass();
         const content = String(body.content || "");
         if (!content) return json({ error: "contentがありません" }, 400);
         const { sha } = await getFile("data/private.enc");
