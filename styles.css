@@ -1019,6 +1019,8 @@ img { max-width: 100%; display: block; }
 .cal__slotrow--closed { color: var(--muted); }
 .cal__slotrow--closed .mark { color: #8a7f86; }
 .cal__slotrow--none .mark { color: #b6a98f; }
+/* 選択中の時間帯の行を強調 */
+.cal__slotrow--sel { outline: 2px solid var(--brand); outline-offset: -2px; border-radius: 8px; font-weight: 800; }
 /* 詳細：空いてる体育館のカードを横スライド表示 */
 .cal__cardhint { font-size: 11px; color: var(--muted); text-align: center; margin-bottom: 8px; }
 .cal__cards {

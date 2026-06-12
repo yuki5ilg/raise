@@ -1085,7 +1085,7 @@ function initCalendar() {
   const today = new Date();
   let data = null;
   let activeGym = "all"; // "all" または gyms のインデックス
-  let activeSlot = null;
+  let activeSlots = new Set(); // 選択中の時間帯（複数可）。どれかが空きなら ○ 扱い
   let selectedDate = null;
   let view = new Date(today.getFullYear(), today.getMonth(), 1);
 
@@ -1106,9 +1106,10 @@ function initCalendar() {
           ? json.updated
           : `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
       }
-      // 既定の時間帯：21:00枠を優先、無ければ最後の枠
+      // 既定の時間帯：21:00枠を優先、無ければ最後の枠（最初は1つだけ選択）
       const slots = json.slots || [];
-      activeSlot = slots.find((s) => s.indexOf("21:00") === 0) || slots[slots.length - 1] || null;
+      const def = slots.find((s) => s.indexOf("21:00") === 0) || slots[slots.length - 1];
+      activeSlots = new Set(def ? [def] : []);
       renderGyms();
       renderSlots();
       renderMonth();
@@ -1149,10 +1150,16 @@ function initCalendar() {
     (data.slots || []).forEach((slot) => {
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "cal__slot" + (slot === activeSlot ? " is-active" : "");
+      const on = activeSlots.has(slot);
+      btn.className = "cal__slot" + (on ? " is-active" : "");
       btn.textContent = slot;
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
       btn.addEventListener("click", () => {
-        activeSlot = slot;
+        if (activeSlots.has(slot)) {
+          if (activeSlots.size > 1) activeSlots.delete(slot); // 最後の1つは残す
+        } else {
+          activeSlots.add(slot);
+        }
         renderSlots();
         renderMonth();
       });
@@ -1163,7 +1170,12 @@ function initCalendar() {
   function gymStatusAt(gym, dateStr) {
     const day = gym && gym.dates && gym.dates[dateStr];
     if (!day) return "none";
-    return day[activeSlot] || "none";
+    // 選択中の時間帯のうち、どれかが空いていれば ok（複数選択対応）
+    const sts = [...activeSlots].map((s) => day[s] || "none");
+    if (sts.includes("ok")) return "ok";
+    if (sts.includes("full")) return "full";
+    if (sts.includes("closed")) return "closed";
+    return "none";
   }
   // 「すべて」表示で、その時間帯に空いている体育館の数を数える
   function okCountAll(dateStr) {
@@ -1248,7 +1260,8 @@ function initCalendar() {
     let html = '<ul class="cal__slotlist">';
     (data.slots || []).forEach((slot) => {
       const st = (day && day[slot]) || "none";
-      html += `<li class="cal__slotrow cal__slotrow--${st}"><span>${slot}</span><span class="mark">${MARK[st] || "–"} ${LABEL[st]}</span></li>`;
+      const sel = activeSlots.has(slot) ? " cal__slotrow--sel" : "";
+      html += `<li class="cal__slotrow cal__slotrow--${st}${sel}"><span>${slot}</span><span class="mark">${MARK[st] || "–"} ${LABEL[st]}</span></li>`;
     });
     return html + "</ul>";
   }
@@ -1257,9 +1270,9 @@ function initCalendar() {
     return `<div class="cal__card${single ? " cal__card--single" : ""}">`
       + `<div class="cal__cardname">${gym.name}</div>${slotListHtml(day)}</div>`;
   }
-  function hasOk(gym, dateStr) {
-    const day = gym && gym.dates && gym.dates[dateStr];
-    return !!day && Object.values(day).includes("ok");
+  // 選択中の時間帯のどれかに空きがあるか
+  function hasOkSelected(gym, dateStr) {
+    return gymStatusAt(gym, dateStr) === "ok";
   }
   function renderDetail(dateStr) {
     if (!detailEl) return;
@@ -1267,10 +1280,10 @@ function initCalendar() {
     const wd = "日月火水木金土"[dt.getDay()];
     let html = `<div class="cal__detailhead">${dt.getMonth() + 1}月${dt.getDate()}日（${wd}）</div>`;
     if (activeGym === "all") {
-      // 空きのある体育館を、磯上→須磨→垂水→東灘（=配列順=優先度）で
-      const avail = (data.gyms || []).filter((g) => hasOk(g, dateStr));
+      // 選択中の時間帯に空きのある体育館だけを、磯上→須磨→垂水→東灘（=配列順=優先度）で
+      const avail = (data.gyms || []).filter((g) => hasOkSelected(g, dateStr));
       if (!avail.length) {
-        html += `<p class="cal__empty">この日に空きのある体育館はありません。</p>`;
+        html += `<p class="cal__empty">選択中の時間帯に空きのある体育館はありません。</p>`;
       } else {
         if (avail.length > 1) html += `<p class="cal__cardhint">← 横にスライドで他の体育館 →</p>`;
         html += '<div class="cal__cards">' + avail.map((g) => cardHtml(g, dateStr, false)).join("") + "</div>";
