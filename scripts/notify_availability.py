@@ -120,19 +120,22 @@ def main():
 
     token = get_token()
 
-    # 日付ごとにまとめて整形
-    by_date = {}
+    # 「日付 → 体育館 → 時間」の順で1件ずつ、ポップに整形
+    slot_disp = SLOT.replace("～", "〜")
+    items = []
     for item in new:
         ds, nm = item.split("|", 1)
-        by_date.setdefault(ds, set()).add(nm.replace("体育館", ""))
-
-    lines = ["🏸 21:00〜23:00に空きが出たよ！"]
-    for ds in sorted(by_date):
         d = datetime.date.fromisoformat(ds)
-        gyms = "・".join(sorted(by_date[ds]))
-        lines.append(f"{d.month}/{d.day}({WD[d.weekday()]}) {gyms}")
+        items.append((d, nm.replace("体育館", "")))
+    items.sort()
+
+    lines = ["📢 体育館に空きが出たよ〜！🏸", ""]
+    for d, nm in items:
+        lines.append(f"🗓 {d.month}/{d.day}({WD[d.weekday()]})　🏟 {nm}　⏰ {slot_disp}")
+    lines.append("")
+    lines.append("お早めにどうぞ〜！🙌")
     if source:
-        lines.append(f"予約 → {source}")
+        lines.append(f"👉 予約はこちら\n{source}")
     text = "\n".join(lines)
 
     if not token:
