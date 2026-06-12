@@ -293,30 +293,6 @@ img { max-width: 100%; display: block; }
   .hero__inner { grid-template-columns: 1fr; gap: 34px; }
   .hero__photo { rotate: 0deg; order: 2; }
 }
-.hero__scroll {
-  position: absolute;
-  bottom: 22px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 26px; height: 42px;
-  border: 2px solid var(--muted);
-  border-radius: 14px;
-}
-.hero__scroll span {
-  position: absolute;
-  top: 8px; left: 50%;
-  width: 4px; height: 8px;
-  margin-left: -2px;
-  background: var(--brand);
-  border-radius: 2px;
-  animation: scrollDot 1.6s infinite;
-}
-@keyframes scrollDot {
-  0% { opacity: 0; transform: translateY(0); }
-  40% { opacity: 1; }
-  100% { opacity: 0; transform: translateY(14px); }
-}
-
 /* ===== Buttons ===== */
 .btn {
   display: inline-flex;
@@ -1228,8 +1204,20 @@ body {
 .reveal-zoom { transform: scale(0.92); }
 .reveal-left.in, .reveal-right.in, .reveal-zoom.in { transform: none; }
 
+/* ===== Scroll progress bar（JSで生成） ===== */
+.scrollprog {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px; width: 0;
+  background: var(--grad);
+  z-index: 1000;
+  box-shadow: 0 0 12px rgba(189, 90, 42, 0.5);
+  transition: width 0.1s linear;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  .scrollprog { display: none; }
 }
 
 /* =====================================================================
@@ -1335,16 +1323,8 @@ body {
   .video-row:hover { transform: translateY(-3px); }
 }
 
-/* スクロールインジケーターを少し弾ませる */
-.hero__scroll { animation: floaty 2.4s ease-in-out infinite; }
-@keyframes floaty {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50%      { transform: translateX(-50%) translateY(6px); }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .login__slide:first-child { opacity: 1; }
-  .hero__scroll { animation: none; }
 }
 
 /* =====================================================================
