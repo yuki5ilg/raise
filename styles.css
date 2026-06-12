@@ -1226,20 +1226,8 @@ body {
 .reveal-zoom { transform: scale(0.92); }
 .reveal-left.in, .reveal-right.in, .reveal-zoom.in { transform: none; }
 
-/* ===== Scroll progress bar（JSで生成） ===== */
-.scrollprog {
-  position: fixed;
-  top: 0; left: 0;
-  height: 3px; width: 0;
-  background: var(--grad);
-  z-index: 1000;
-  box-shadow: 0 0 12px rgba(189, 90, 42, 0.5);
-  transition: width 0.1s linear;
-}
-
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .scrollprog { display: none; }
 }
 
 /* =====================================================================
@@ -1553,29 +1541,6 @@ body {
   .uploader__rowdel { justify-self: end; }
 }
 
-/* ===== Marquee ===== */
-.marquee {
-  overflow: hidden;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  padding: 16px 0;
-  background: rgba(255, 250, 242, 0.5);
-}
-.marquee__track {
-  display: flex;
-  white-space: nowrap;
-  width: max-content;
-  animation: marquee 30s linear infinite;
-}
-.marquee__track span {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-size: clamp(15px, 2.6vw, 20px);
-  letter-spacing: 0.14em;
-  color: rgba(58, 42, 24, 0.45);
-}
-@keyframes marquee { to { transform: translateX(-50%); } }
-
 /* ===== Film grain ===== */
 .grain {
   position: fixed;
@@ -1592,20 +1557,6 @@ body {
   padding: 56px 24px calc(28px + env(safe-area-inset-bottom));
   position: relative;
 }
-.footer__nav {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 10px 26px;
-  margin: 0 0 18px;
-}
-.footer__nav a {
-  color: rgba(255, 252, 246, 0.6);
-  font-size: 13.5px;
-  font-weight: 600;
-  transition: color 0.25s;
-}
-.footer__nav a:hover { color: var(--brand-2); }
 .footer__logo { margin-bottom: 22px; }
 .footer__top {
   position: absolute;
@@ -1631,6 +1582,5 @@ body {
 .hero__photo { will-change: transform; transform-style: preserve-3d; }
 
 @media (prefers-reduced-motion: reduce) {
-  .marquee__track { animation: none; }
   .grain { display: none; }
 }

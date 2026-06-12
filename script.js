@@ -430,24 +430,14 @@ function initUpload() {
   }
 }
 
-// ===== リッチモーション（スクロール進捗バー＋パララックス） =====
+// ===== リッチモーション（パララックス＋ヒーローのチルト） =====
 function initMotion() {
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-  // 上部のスクロール進捗バー
-  let bar = document.querySelector(".scrollprog");
-  if (!bar) {
-    bar = document.createElement("div");
-    bar.className = "scrollprog";
-    document.body.appendChild(bar);
-  }
   const heroPhoto = document.querySelector(".hero__photo");
-  const doc = document.documentElement;
   let ticking = false;
 
   const update = () => {
-    const max = doc.scrollHeight - doc.clientHeight;
-    bar.style.width = max > 0 ? (doc.scrollTop / max) * 100 + "%" : "0";
     // ヒーロー写真をゆっくり沈める（画面内のときだけ）
     if (heroPhoto && window.scrollY < window.innerHeight) {
       heroPhoto.style.transform = "translateY(" + window.scrollY * 0.06 + "px)";
