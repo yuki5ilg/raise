@@ -24,10 +24,12 @@ Workerの **Settings → Variables and Secrets** で追加:
 
 | 名前 | 値 | 種類 |
 |---|---|---|
-| `GITHUB_TOKEN` | 手順1のトークン | **Secret（Encrypt）** |
-| `UPLOAD_PASS` | 投稿パスワード（メンバーに共有する合言葉。好きな文字列） | **Secret（Encrypt）** |
-| `REPO` | `yuki5ilg/raise` | Text（省略可・既定値あり） |
-| `ALLOWED_ORIGIN` | サイトのURLのオリジン（例 `https://yuki5ilg.github.io`） | Text（省略可） |
+| `GITHUB_TOKEN` | 手順1のトークン（`github_pat_...` をそのまま。"Bearer" は付けない） | **必須・Secret（Encrypt）** |
+| `UPLOAD_PASS` | 投稿パスワード（合言葉） | 省略可・Secret。**設定したときだけ**投稿時にパスワードを要求。未設定なら誰でも投稿可 |
+| `REPO` | `yuki5ilg/raise` | 省略可（既定値あり） |
+| `ALLOWED_ORIGIN` | サイトのオリジン（例 `https://yuki5ilg.github.io`） | 省略可（未設定なら `*`） |
+
+> 設定が必須なのは **`GITHUB_TOKEN` だけ**。`UPLOAD_PASS` と `ALLOWED_ORIGIN` は無くても動きます。
 
 ## 4. サイトにWorkerのURLを設定する
 

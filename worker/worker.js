@@ -10,10 +10,10 @@
  *     → images/gallery/ に画像を保存し data/gallery.json に追記してコミット
  *
  * 環境変数（Workerの Settings → Variables で設定）:
- *   GITHUB_TOKEN   … Fine-grained PAT（対象リポジトリの Contents: Read and write）※Secret推奨
- *   UPLOAD_PASS    … 投稿パスワード（メンバーに共有する合言葉）※Secret推奨
+ *   GITHUB_TOKEN   … Fine-grained PAT（対象リポジトリの Contents: Read and write）※必須・Secret推奨
+ *   UPLOAD_PASS    … 省略可。設定した場合のみ投稿パスワードを要求する（未設定なら誰でも投稿可）
  *   REPO           … 省略可。既定 "yuki5ilg/raise"
- *   ALLOWED_ORIGIN … 省略可。CORSで許可するサイトのオリジン（例 https://yuki5ilg.github.io）。既定 "*"
+ *   ALLOWED_ORIGIN … 省略可。CORSで許可するオリジン。未設定なら "*"（どこからでも許可）
  */
 
 export default {
@@ -38,7 +38,8 @@ export default {
     } catch {
       return json({ error: "JSONが不正です" }, 400);
     }
-    if (!env.UPLOAD_PASS || body.pass !== env.UPLOAD_PASS) {
+    // UPLOAD_PASS を設定したときだけパスワードを要求する（未設定なら誰でも投稿可）
+    if (env.UPLOAD_PASS && body.pass !== env.UPLOAD_PASS) {
       return json({ error: "パスワードが違います" }, 403);
     }
 
