@@ -69,7 +69,7 @@ export default {
       const message = String(body.message || "").trim();
       // ハニーポット（人間は触らない隠し項目）に入力があればボット → 成功を装って破棄
       if (String(body.company || "").trim()) return json({ ok: true });
-      if (!name || !message) return json({ error: "お名前とメッセージを入力してください" }, 400);
+      if (!name || !email || !message) return json({ error: "お名前・連絡先・メッセージを入力してください" }, 400);
       if (message.length > 5000) return json({ error: "メッセージが長すぎます" }, 400);
       if (!env.CONTACT_EMAIL) {
         console.error("設定エラー: send_email バインディング(CONTACT_EMAIL)未設定");

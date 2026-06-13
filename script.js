@@ -201,7 +201,7 @@ function initContact() {
     const email = document.getElementById("cfEmail").value.trim();
     const message = document.getElementById("cfMessage").value.trim();
     const company = document.getElementById("cfCompany").value.trim(); // ハニーポット
-    if (!name || !message) { msg.textContent = "お名前とメッセージを入力してね"; return; }
+    if (!name || !email || !message) { msg.textContent = "お名前・連絡先・メッセージを入力してね"; return; }
     if (!apiUrl("/contact")) { msg.textContent = "ただいまお問い合わせを利用できません"; return; }
     msg.textContent = "送信しています…";
     try {
