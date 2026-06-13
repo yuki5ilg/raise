@@ -894,6 +894,7 @@ img { max-width: 100%; display: block; }
   transition: background 0.2s, border-color 0.2s;
 }
 .cal__navbtn:hover { border-color: var(--brand); }
+.cal__navbtn:disabled { opacity: 0.3; cursor: default; border-color: var(--line); }
 .cal__month { font-weight: 800; font-size: 17px; min-width: 120px; text-align: center; }
 .cal__legend {
   display: flex;
@@ -910,6 +911,12 @@ img { max-width: 100%; display: block; }
   border-radius: 999px; background: #3f9b6b; color: #fff;
   font-size: 10px; font-weight: 800; line-height: 1;
 }
+/* 凡例の記号（カレンダーのマークと同じ ◎○×休） */
+.cal__legmark { font-weight: 800; font-size: 14px; line-height: 1; }
+.cal__legmark--ok2 { color: #2f8d5e; }
+.cal__legmark--ok { color: #3f9b6b; }
+.cal__legmark--full { color: #c0563f; }
+.cal__legmark--closed { color: var(--muted); }
 .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .dot--ok { background: #3f9b6b; }
 .dot--ok2 { background: #2f8d5e; box-shadow: 0 0 0 2px rgba(47,141,94,0.35); }

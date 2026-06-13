@@ -1289,6 +1289,15 @@ function initCalendar() {
     const m = view.getMonth();
     monthEl.textContent = `${y}年 ${m + 1}月`;
 
+    // 月移動は「今月〜翌々月」だけ（取得対象の範囲外には行けないようにする）
+    const minIdx = today.getFullYear() * 12 + today.getMonth();
+    const maxIdx = minIdx + 2;
+    const vi = y * 12 + m;
+    const prevBtn = document.getElementById("calPrev");
+    const nextBtn = document.getElementById("calNext");
+    if (prevBtn) prevBtn.disabled = vi <= minIdx;
+    if (nextBtn) nextBtn.disabled = vi >= maxIdx;
+
     const firstDay = new Date(y, m, 1).getDay();
     const daysInMonth = new Date(y, m + 1, 0).getDate();
     gridEl.innerHTML = "";
