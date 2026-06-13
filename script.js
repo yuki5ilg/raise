@@ -201,7 +201,8 @@ function initContact() {
     const email = document.getElementById("cfEmail").value.trim();
     const message = document.getElementById("cfMessage").value.trim();
     const company = document.getElementById("cfCompany").value.trim(); // ハニーポット
-    if (!name || !email || !message) { msg.textContent = "お名前・連絡先・メッセージを入力してね"; return; }
+    if (!name || !email || !message) { msg.textContent = "お名前・メールアドレス・メッセージを入力してね"; return; }
+    if (!/^.+@.+\..+$/.test(email)) { msg.textContent = "メールアドレスの形式を確認してね"; return; }
     if (!apiUrl("/contact")) { msg.textContent = "ただいまお問い合わせを利用できません"; return; }
     msg.textContent = "送信しています…";
     try {
@@ -268,6 +269,45 @@ function initGallery() {
   };
   const updateSelCount = () => { if (selCount) selCount.textContent = `${selected.size}枚選択中`; };
 
+  // ===== justified（両端ぞろえ）レイアウト：行ごとに高さを揃えて横幅いっぱいに詰める =====
+  const arOf = (fig) => {
+    const img = fig.querySelector("img");
+    if (img && img.naturalWidth && img.naturalHeight) return img.naturalWidth / img.naturalHeight;
+    return fig._ar || 1.4;
+  };
+  function layoutGallery() {
+    if (!photoData) return; // 既定の4枚はCSSにお任せ
+    const W = grid.clientWidth;
+    if (!W) return;
+    const gap = 8;
+    const target = W <= 560 ? 150 : 220; // 目標の行の高さ
+    const figs = Array.from(grid.children).filter((el) => el.classList.contains("gallery__item"));
+    let row = [], sumAR = 0;
+    const flush = (isLast) => {
+      if (!row.length) return;
+      const gaps = gap * (row.length - 1);
+      let h = (W - gaps) / sumAR; // この行を横幅いっぱいにする高さ
+      if (isLast && h > target) h = target; // 最終行は伸ばしすぎない
+      row.forEach((fig) => {
+        fig.style.width = Math.floor(arOf(fig) * h) + "px";
+        fig.style.height = Math.round(h) + "px";
+      });
+      row = []; sumAR = 0;
+    };
+    figs.forEach((fig) => {
+      sumAR += arOf(fig);
+      row.push(fig);
+      if ((W - gap * (row.length - 1)) / sumAR <= target) flush(false);
+    });
+    flush(true);
+  }
+  let layoutRAF = 0;
+  const scheduleLayout = () => {
+    cancelAnimationFrame(layoutRAF);
+    layoutRAF = requestAnimationFrame(layoutGallery);
+  };
+  window.addEventListener("resize", scheduleLayout, { passive: true });
+
   const render = () => {
     if (!photoData) { collectFromDom(); return; }
     grid.innerHTML = "";
@@ -280,6 +320,7 @@ function initGallery() {
       img.src = p.src;
       img.alt = p.alt || "";
       img.loading = "lazy";
+      img.addEventListener("load", scheduleLayout); // 縦横比が分かったら詰め直す
       fig.appendChild(img);
       if (editing) {
         if (selected.has(p.src)) fig.classList.add("is-selected");
@@ -303,6 +344,7 @@ function initGallery() {
       }
       grid.appendChild(fig);
     });
+    scheduleLayout(); // 並べ直し
   };
 
   const uploader = document.getElementById("photoUploader");
@@ -1124,7 +1166,7 @@ function initCalendar() {
   const sourceEl = document.getElementById("calSource");
 
   const MARK = { ok3: "◎", ok2: "◎", ok: "○", full: "×", closed: "休" };
-  const LABEL = { ok3: "空き(3面以上)", ok2: "空き(2面)", ok: "空き", full: "予約済み", closed: "休館", none: "情報なし" };
+  const LABEL = { ok3: "空き(3面以上)", ok2: "空き(2面)", ok: "空き", full: "空きなし", closed: "休館", none: "情報なし" };
   const FACE = { ok: "1面", ok2: "2面", ok3: "3面以上" }; // カードで「何面空き」を出す
   const isOk = (st) => st === "ok" || st === "ok2" || st === "ok3"; // 空き（1面以上）判定
   const today = new Date();
@@ -1256,31 +1298,44 @@ function initCalendar() {
       cell.className = "cal__cell cal__cell--empty";
       gridEl.appendChild(cell);
     }
+    // 選べる範囲：今日〜翌々月末（取得対象の範囲）。それ以外は選択不可・カードも出さない
+    const todayStr = ymd(today.getFullYear(), today.getMonth(), today.getDate());
+    const maxD = new Date(today.getFullYear(), today.getMonth() + 3, 0); // 翌々月末
+    const maxStr = ymd(maxD.getFullYear(), maxD.getMonth(), maxD.getDate());
+
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = ymd(y, m, d);
-      const status = statusFor(dateStr);
       const cell = document.createElement("button");
       cell.type = "button";
-      cell.className = `cal__cell cal__cell--${status}`;
-      if (dateStr === selectedDate) cell.classList.add("cal__cell--sel");
-      if (y === today.getFullYear() && m === today.getMonth() && d === today.getDate()) {
-        cell.classList.add("cal__cell--today");
-      }
       const num = document.createElement("span");
       num.className = "num";
       num.textContent = d;
+
+      // 範囲外（過去 / 翌々月末より後）は選べない＝マークもカードも出さない
+      if (dateStr < todayStr || dateStr > maxStr) {
+        cell.className = "cal__cell cal__cell--disabled";
+        cell.disabled = true;
+        cell.append(num);
+        gridEl.appendChild(cell);
+        continue;
+      }
+
+      const status = statusFor(dateStr);
+      cell.className = `cal__cell cal__cell--${status}`;
+      if (dateStr === selectedDate) cell.classList.add("cal__cell--sel");
+      if (dateStr === todayStr) cell.classList.add("cal__cell--today");
       const mark = document.createElement("span");
       mark.className = "mark";
       mark.textContent = MARK[status] || "–";
       cell.append(num, mark);
-      // 「すべて」表示で2館以上空いている日は、空き館数をバッジで出す
+      // 「すべて」表示で2館以上空いている日は、空き施設数をバッジで出す
       if (activeGym === "all" && isOk(status)) {
         const count = okCountAll(dateStr);
         if (count >= 2) {
           const badge = document.createElement("span");
           badge.className = "cal__count";
           badge.textContent = count;
-          badge.title = `${count}館 空き`;
+          badge.title = `${count}施設 空き`;
           cell.appendChild(badge);
           cell.classList.add("cal__cell--multi");
         }

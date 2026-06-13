@@ -69,7 +69,8 @@ export default {
       const message = String(body.message || "").trim();
       // ハニーポット（人間は触らない隠し項目）に入力があればボット → 成功を装って破棄
       if (String(body.company || "").trim()) return json({ ok: true });
-      if (!name || !email || !message) return json({ error: "お名前・連絡先・メッセージを入力してください" }, 400);
+      if (!name || !message) return json({ error: "お名前とメッセージを入力してください" }, 400);
+      if (!/^.+@.+\..+$/.test(email)) return json({ error: "メールアドレスの形式が正しくありません" }, 400);
       if (message.length > 5000) return json({ error: "メッセージが長すぎます" }, 400);
       if (!env.CONTACT_EMAIL) {
         console.error("設定エラー: send_email バインディング(CONTACT_EMAIL)未設定");
@@ -77,9 +78,9 @@ export default {
       }
       const fromAddr = env.CONTACT_FROM || "raise-contact@yuki5ilg.com";
       const toAddr = env.CONTACT_TO || "yuki5ilg@gmail.com"; // ※Email Routingで認証済みの宛先のみ
-      const replyTo = /.+@.+\..+/.test(email) ? email : "";
+      const replyTo = email; // メールは必須なので必ず返信先に入る
       const subject = `【raise】お問い合わせ: ${name}`;
-      const text = `お名前: ${name}\n連絡先: ${email || "(未記入)"}\n\n${message}\n`;
+      const text = `お名前: ${name}\nメール: ${email}\n\n${message}\n`;
       // UTF-8 を安全に送るため、件名はRFC2047(B符号化)、本文はbase64で組み立てる
       const raw =
         `From: raise <${fromAddr}>\r\n` +

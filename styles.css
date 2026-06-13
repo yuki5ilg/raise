@@ -904,6 +904,12 @@ img { max-width: 100%; display: block; }
   margin-bottom: 14px;
 }
 .cal__legend span { display: inline-flex; align-items: center; gap: 6px; }
+.cal__legend-num {
+  display: inline-grid; place-items: center;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  border-radius: 999px; background: #3f9b6b; color: #fff;
+  font-size: 10px; font-weight: 800; line-height: 1;
+}
 .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .dot--ok { background: #3f9b6b; }
 .dot--ok2 { background: #2f8d5e; box-shadow: 0 0 0 2px rgba(47,141,94,0.35); }
@@ -943,7 +949,12 @@ img { max-width: 100%; display: block; }
 .cal__cell--empty { background: transparent; }
 .cal__cell { cursor: pointer; font-family: inherit; }
 .cal__cell--empty { cursor: default; }
-.cal__cell--today { border-color: var(--brand); }
+/* 今日を強調：太い枠＋ブランド色の数字 */
+.cal__cell--today { border: 2px solid var(--brand); box-shadow: 0 0 0 2px rgba(194, 98, 46, 0.22); }
+.cal__cell--today .num { color: var(--brand); font-weight: 800; }
+/* 範囲外（過去 / 翌々月末より後）は選べない＝薄く・操作不可 */
+.cal__cell--disabled { background: transparent; cursor: default; opacity: 0.32; }
+.cal__cell--disabled .num { color: var(--muted); }
 .cal__cell--sel { outline: 2px solid var(--brand); outline-offset: 1px; }
 .cal__cell .num { color: var(--text); }
 .cal__cell--ok { background: rgba(63, 155, 107, 0.14); }
@@ -1371,30 +1382,32 @@ body {
      マーキー／グレイン／フッター刷新／カレンダー安定化）
    ===================================================================== */
 
-/* ===== Gallery: 行優先グリッド（左上→右上→左下…の並び・全体表示） ===== */
+/* ===== Gallery: justified（両端ぞろえ）レイアウト =====
+   左上→右上→…の行優先で、各行を横幅いっぱいに詰める。高さは行ごとに揃え、
+   幅は写真の縦横比に応じて変える＝トリミングなし・空白なし（JSで実寸を計算）。 */
 .gallery-grid {
-  column-count: unset;
-  column-gap: unset;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  align-items: start;       /* 各画像は行の上端ぞろえ（高さは自然のまま） */
-  gap: 14px;
-  max-width: 860px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 8px;
+  max-width: 900px;
   margin: 0 auto;
 }
 .gallery__item {
   margin: 0;
-  break-inside: auto;
-  border-radius: 18px;
+  height: 220px;            /* 初期値。JSが縦横比に合わせて幅/高さを上書き */
+  flex: 0 0 auto;
+  border-radius: 14px;
   overflow: hidden;
   box-shadow: var(--shadow-soft);
   cursor: zoom-in;
   position: relative;
 }
-/* 写真は自然な縦横比で全体表示（横長でも切れない） */
+/* 箱の縦横比＝写真の縦横比に合わせるので cover でも切れない */
 .gallery__item img {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
   display: block;
   transition: transform 0.8s var(--ease);
 }
@@ -1413,7 +1426,8 @@ body {
   .gallery__item:hover::after { opacity: 1; }
 }
 @media (max-width: 560px) {
-  .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .gallery-grid { gap: 6px; }
+  .gallery__item { height: 150px; }
 }
 
 /* ===== Lightbox ===== */

@@ -140,6 +140,7 @@ def main():
         lines.append(f"🗓 {d.month}/{d.day}({WD[d.weekday()]})　🏟 {nm}　⏰ {slot_disp}{suffix}")
     lines.append("")
     lines.append("お早めにどうぞ〜！🙌")
+    lines.append("🏸 raise: https://raise.yuki5ilg.com/")
     if source:
         lines.append(f"👉 予約はこちら\n{source}")
     text = "\n".join(lines)

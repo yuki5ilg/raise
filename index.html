@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,900;1,9..144,500&family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;700;900&family=Shippori+Mincho:wght@500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260613e" />
+  <link rel="stylesheet" href="styles.css?v=20260613f" />
 </head>
 <body>
   <!-- ===== ログインゲート ===== -->
@@ -303,12 +303,12 @@
           <div class="cal__slots" id="calSlots" role="tablist" aria-label="時間帯の選択"></div>
         </div>
         <div class="cal__legend">
-          <span><i class="dot dot--ok2"></i>2面以上</span>
+          <span><i class="dot dot--ok2"></i>2面以上の空き</span>
           <span><i class="dot dot--ok"></i>空き</span>
-          <span><i class="dot dot--full"></i>予約済み</span>
+          <span><i class="dot dot--full"></i>空きなし</span>
           <span><i class="dot dot--closed"></i>休館</span>
-          <span><i class="dot dot--none"></i>情報なし</span>
-          <span class="cal__taphint">日付をタップで全時間帯を表示</span>
+          <span><span class="cal__legend-num">2</span>空き施設数</span>
+          <span class="cal__taphint">日付をタップで時間帯ごとの空きを表示</span>
         </div>
         <div class="cal__weekdays">
           <span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span>
@@ -321,7 +321,7 @@
         </p>
       </div>
       <div class="cal__notify is-hidden" id="calNotify">
-        <p class="cal__notifylead">21:00〜23:00などに空きが出たらLINEでお知らせ。友だち追加で受け取れます。</p>
+        <p class="cal__notifylead">磯上・須磨・垂水・東灘の <strong>21:00〜23:00</strong> に空き枠が出たら、LINEでお知らせします。</p>
         <a id="lineAddBtn" class="btn line-btn" href="#" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12 2C6.5 2 2 5.7 2 10.2c0 4 3.6 7.4 8.5 8 .33.07.78.22.9.5.1.26.07.66.03.92l-.14.86c-.04.26-.2 1 .9.55 1.1-.46 5.9-3.48 8.05-5.96C21.6 13.4 22 11.9 22 10.2 22 5.7 17.5 2 12 2Z"/></svg>
           LINEで空き通知を受け取る
@@ -392,7 +392,7 @@
       </div>
       <form class="contact__form reveal" id="contactForm" autocomplete="on">
         <input type="text" id="cfName" placeholder="お名前" aria-label="お名前" required />
-        <input type="text" id="cfEmail" placeholder="連絡先（メールアドレス または LINE名など）" aria-label="連絡先" autocomplete="email" required />
+        <input type="email" id="cfEmail" placeholder="メールアドレス（必須）" aria-label="メールアドレス" autocomplete="email" required />
         <textarea id="cfMessage" placeholder="メッセージ" aria-label="メッセージ" rows="5" required></textarea>
         <!-- スパム対策の隠し項目（人間は入力しない） -->
         <input type="text" id="cfCompany" tabindex="-1" autocomplete="off" aria-hidden="true" class="is-hidden" />
@@ -438,6 +438,6 @@
   <div class="grain" aria-hidden="true"></div>
 
   <!-- ?v= はキャッシュ対策。script.js / styles.css を更新したらこの番号も上げる -->
-  <script src="script.js?v=20260613e"></script>
+  <script src="script.js?v=20260613f"></script>
 </body>
 </html>
