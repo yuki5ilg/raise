@@ -10,6 +10,9 @@ const PASS_VERIFIER = {
 const STORAGE_KEY = "raise_authed";
 const GUEST_KEY = "raise_guest";
 let IS_GUEST = false; // ゲスト（合言葉なし）で閲覧中か
+// 限定公開動画の復号番号。合言葉ログイン済みのメンバーは自動解錠に使う
+// （ゲストは手入力）。この番号は data/videos.json の注記にも記載済み。
+const VAULT_PASS = "3810";
 
 // メンバー限定の機能のプレースホルダ（ゲストに表示）
 function lockedHtml(label) {
@@ -1104,33 +1107,40 @@ function initVideos() {
       });
   }
 
-  // 限定公開の解錠フォーム
+  // 限定公開の解錠
   const form = document.getElementById("vaultForm");
+  const passEl = document.getElementById("vaultPass");
+  const msgEl = document.getElementById("vaultMsg");
+  const unlockVault = (password) =>
+    fetch("data/private.enc", { cache: "no-store" })
+      .then((res) => { if (!res.ok) throw new Error("nofile"); return res.text(); })
+      .then((b64) => decryptVault(password, b64))
+      .then((json) => {
+        vaultPassword = password;
+        vaultKey = password; // 追加・削除で再入力を省くため覚える
+        vaultVideos = (json.videos || []).filter((v) => youTubeId(v.url));
+        if (msgEl) msgEl.textContent = vaultVideos.length ? "" : "登録されている限定動画はありません。";
+        if (passEl) passEl.value = "";
+        if (form) form.style.display = "none";
+        renderVault();
+      });
   if (form) {
-    const passEl = document.getElementById("vaultPass");
-    const msgEl = document.getElementById("vaultMsg");
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const password = passEl.value;
       if (!password) return;
       msgEl.textContent = "復号しています…";
-      fetch("data/private.enc", { cache: "no-store" })
-        .then((res) => { if (!res.ok) throw new Error("nofile"); return res.text(); })
-        .then((b64) => decryptVault(password, b64))
-        .then((json) => {
-          vaultPassword = password;
-          vaultKey = password; // 追加・削除で再入力を省くため覚える
-          vaultVideos = (json.videos || []).filter((v) => youTubeId(v.url));
-          msgEl.textContent = vaultVideos.length ? "" : "登録されている限定動画はありません。";
-          passEl.value = "";
-          form.style.display = "none";
-          renderVault();
-        })
-        .catch((err) => {
-          msgEl.textContent =
-            err && err.message === "nofile" ? "限定動画はまだ登録されていません。" : "パスワードが違います。";
-        });
+      unlockVault(password).catch((err) => {
+        msgEl.textContent =
+          err && err.message === "nofile" ? "限定動画はまだ登録されていません。" : "パスワードが違います。";
+      });
     });
+  }
+  // メンバー（合言葉ログイン済み）は限定公開も自動で開く＝パスワード要求なし。
+  // ゲストはフォームから番号を入れて閲覧する。
+  if (!IS_GUEST) {
+    if (form) form.style.display = "none";
+    unlockVault(VAULT_PASS).catch(() => { if (form) form.style.display = ""; });
   }
 }
 
