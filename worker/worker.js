@@ -11,12 +11,17 @@
  *   POST /delete-photo { src }     … 写真を削除
  *   POST /update-photo { src, alt }… 写真の名前(alt)を変更
  *   POST /put-vault    { content } … 限定公開(private.enc)を保存
+ *   POST /contact      { name, email, message, company(honeypot) } … 問い合わせをメール送信
  *
  * 削除や限定公開の保護は「ブラウザ側で 3810 で private.enc を復号できるか」で行う
  * （限定動画の閲覧と同じ仕組み）。Worker側に削除用パスワードは持たせない。
  *
  * 環境変数（Workerの Settings → Variables で設定）:
  *   GITHUB_TOKEN   … Fine-grained PAT（対象リポジトリの Contents: Read and write）※必須・Secret推奨
+ *   RESEND_API_KEY … お問い合わせ送信に使う Resend のAPIキー（/contact用・Secret推奨）
+ *   CONTACT_TO     … 問い合わせの宛先メール（省略可。既定 "yuki@yuki5ilg.com"）
+ *   CONTACT_FROM   … 差出人（省略可。既定は Resend の onboarding@resend.dev。
+ *                    ドメイン認証後は "raise <contact@yuki5ilg.com>" 等にする）
  *   REPO           … 省略可。既定 "yuki5ilg/raise"
  *   ALLOWED_ORIGIN … 省略可。CORSで許可するオリジン。未設定なら "*"（どこからでも許可）
  */
@@ -43,6 +48,41 @@ export default {
     } catch {
       return json({ error: "JSONが不正です" }, 400);
     }
+
+    // ===== お問い合わせ（GitHub不要・Resendでメール送信）=====
+    // 投稿用トークンとは無関係に動くよう、トークンチェックより前で処理する。
+    if (new URL(request.url).pathname === "/contact") {
+      const name = String(body.name || "").trim();
+      const email = String(body.email || "").trim();
+      const message = String(body.message || "").trim();
+      // ハニーポット（人間は触らない隠し項目）に入力があればボット → 成功を装って破棄
+      if (String(body.company || "").trim()) return json({ ok: true });
+      if (!name || !message) return json({ error: "お名前とメッセージを入力してください" }, 400);
+      if (message.length > 5000) return json({ error: "メッセージが長すぎます" }, 400);
+      const key = (env.RESEND_API_KEY || "").trim();
+      if (!key) {
+        console.error("設定エラー: RESEND_API_KEY 未設定");
+        return json({ error: "ただいまお問い合わせを受け付けられません" }, 500);
+      }
+      const payload = {
+        from: env.CONTACT_FROM || "raise お問い合わせ <onboarding@resend.dev>",
+        to: env.CONTACT_TO || "yuki@yuki5ilg.com",
+        subject: `【raise】お問い合わせ: ${name}`,
+        text: `お名前: ${name}\n連絡先: ${email || "(未記入)"}\n\n${message}`,
+      };
+      if (/.+@.+\..+/.test(email)) payload.reply_to = email; // 返信先を送信者に
+      const r = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!r.ok) {
+        console.error("contact send fail", r.status, await r.text().catch(() => ""));
+        return json({ error: "送信に失敗しました。時間をおいてお試しください" }, 502);
+      }
+      return json({ ok: true });
+    }
+
     const repo = env.REPO || "yuki5ilg/raise";
     // トークンの前後に空白/改行が混ざると "Bad credentials" になるので落とす
     const token = (env.GITHUB_TOKEN || "").trim();

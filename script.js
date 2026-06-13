@@ -185,6 +185,39 @@ function initSite() {
 
   // 動画・写真の追加フォーム
   initUpload();
+
+  // お問い合わせフォーム
+  initContact();
+}
+
+// お問い合わせ：Worker(/contact) 経由でメール送信
+function initContact() {
+  const form = document.getElementById("contactForm");
+  if (!form) return;
+  const msg = document.getElementById("contactMsg");
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("cfName").value.trim();
+    const email = document.getElementById("cfEmail").value.trim();
+    const message = document.getElementById("cfMessage").value.trim();
+    const company = document.getElementById("cfCompany").value.trim(); // ハニーポット
+    if (!name || !message) { msg.textContent = "お名前とメッセージを入力してね"; return; }
+    if (!apiUrl("/contact")) { msg.textContent = "ただいまお問い合わせを利用できません"; return; }
+    msg.textContent = "送信しています…";
+    try {
+      const res = await fetch(apiUrl("/contact"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, message, company }),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(j.error || "送信に失敗しました");
+      msg.textContent = "送信したよ！ありがとう🙌 折り返し連絡するね";
+      form.reset();
+    } catch (err) {
+      msg.textContent = err.message || "送信に失敗しました";
+    }
+  });
 }
 
 // ===== アップロードAPI（Cloudflare Worker）共通 =====
