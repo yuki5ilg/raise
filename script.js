@@ -8,6 +8,19 @@ const PASS_VERIFIER = {
   hash: "I2na1NZk5v2KYQLxmR3qgj1wD7oAYWsNe5YbNrpVNCU=",
 };
 const STORAGE_KEY = "raise_authed";
+const GUEST_KEY = "raise_guest";
+let IS_GUEST = false; // ゲスト（合言葉なし）で閲覧中か
+
+// メンバー限定の機能のプレースホルダ（ゲストに表示）
+function lockedHtml(label) {
+  return (
+    '<div class="locked">' +
+    '<span class="locked__icon" aria-hidden="true">🔒</span>' +
+    '<p class="locked__title">メンバー限定の機能です</p>' +
+    `<p class="locked__sub">${label}は合言葉でログインすると見られます</p>` +
+    "</div>"
+  );
+}
 
 const loginEl = document.getElementById("login");
 const siteEl = document.getElementById("site");
@@ -36,6 +49,9 @@ async function verifyPasscode(password) {
 
 // ===== ログイン判定 =====
 function showSite() {
+  // メンバー(合言葉)でなく、ゲストフラグがあればゲスト表示
+  IS_GUEST = sessionStorage.getItem(STORAGE_KEY) !== "1" && sessionStorage.getItem(GUEST_KEY) === "1";
+  document.body.classList.toggle("is-guest", IS_GUEST);
   loginEl.hidden = true;
   loginEl.style.display = "none";
   siteEl.hidden = false;
@@ -44,13 +60,26 @@ function showSite() {
 }
 
 function checkAuth() {
-  // 一度ログインしたら同じブラウザでは再入力不要（セッション中のみ保持）
-  if (sessionStorage.getItem(STORAGE_KEY) === "1") {
+  // 一度ログイン（メンバー or ゲスト）したら同じブラウザでは再入力不要（セッション中のみ）
+  if (sessionStorage.getItem(STORAGE_KEY) === "1" || sessionStorage.getItem(GUEST_KEY) === "1") {
     showSite();
   } else {
     document.body.style.overflow = "hidden";
     inputEl.focus();
   }
+}
+
+// ゲストとして閲覧（合言葉なし・一部はメンバー限定表示）
+const guestBtn = document.getElementById("guestBtn");
+if (guestBtn) {
+  guestBtn.addEventListener("click", () => {
+    sessionStorage.setItem(GUEST_KEY, "1");
+    sessionStorage.removeItem(STORAGE_KEY);
+    errorEl.textContent = "";
+    loginEl.style.opacity = "0";
+    loginEl.style.transition = "opacity 0.5s";
+    setTimeout(showSite, 350);
+  });
 }
 
 function rejectLogin() {
@@ -68,6 +97,7 @@ formEl.addEventListener("submit", (e) => {
     .then((ok) => {
       if (ok) {
         sessionStorage.setItem(STORAGE_KEY, "1");
+        sessionStorage.removeItem(GUEST_KEY);
         errorEl.textContent = "";
         loginEl.style.opacity = "0";
         loginEl.style.transition = "opacity 0.5s";
@@ -251,6 +281,7 @@ async function ensureVaultKey() {
 function initGallery() {
   const grid = document.getElementById("galleryGrid");
   if (!grid) return;
+  if (IS_GUEST) { grid.innerHTML = lockedHtml("ギャラリー"); return; } // ゲストはメンバー限定表示
 
   let photoData = null; // gallery.json の配列（無ければ null＝HTML既定の4枚）
   let photos = [];      // ライトボックス用（表示順の {src,alt}）
@@ -1048,7 +1079,7 @@ function initVideos() {
     if (uploader) uploader.classList.toggle("is-hidden", !editing);
   };
 
-  if (editToggle) {
+  if (editToggle && !IS_GUEST) {
     editToggle.addEventListener("click", async () => {
       if (editing) { await saveTitles(); editing = false; }
       else editing = true;
@@ -1058,8 +1089,10 @@ function initVideos() {
     });
   }
 
-  // 非公開リストの読み込み
-  if (pubGrid) {
+  // 非公開リストの読み込み（ゲストはメンバー限定表示）
+  if (pubGrid && IS_GUEST) {
+    pubGrid.innerHTML = lockedHtml("非公開動画");
+  } else if (pubGrid) {
     fetch("data/videos.json", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : { videos: [] }))
       .then((json) => {

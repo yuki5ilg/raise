@@ -1695,6 +1695,32 @@ body {
 .contact__form .btn { align-self: center; margin-top: 4px; }
 .contact__msg { text-align: center; font-size: 13px; color: var(--brand); min-height: 18px; font-weight: 600; }
 
+/* ゲスト用「メンバー限定の機能です」プレースホルダ */
+.locked { text-align: center; padding: 44px 20px; color: var(--muted); }
+.locked__icon { font-size: 30px; display: block; margin-bottom: 10px; }
+.locked__title { font-weight: 800; color: var(--text); margin: 0 0 4px; }
+.locked__sub { font-size: 13px; margin: 0; }
+/* ゲストは編集・追加系を隠す */
+body.is-guest .gallery-tools,
+body.is-guest #videoEditHint,
+body.is-guest #videoUploader,
+body.is-guest #photoUploader,
+body.is-guest #galleryEditActions,
+body.is-guest #galleryEditHint { display: none !important; }
+/* ログインのゲストボタン */
+.login__guest {
+  margin-top: 16px; background: none; border: 0; padding: 4px;
+  color: var(--muted); font: inherit; font-size: 14px; text-decoration: underline;
+  cursor: pointer;
+}
+.login__guest:hover { color: var(--brand); }
+/* 準備中バッジ */
+.badge-soon {
+  display: inline-block; font-size: 11px; font-weight: 800; padding: 2px 9px;
+  border-radius: 999px; background: var(--brand); color: #fff;
+  vertical-align: middle; margin-left: 8px;
+}
+
 /* ===== Film grain ===== */
 .grain {
   position: fixed;

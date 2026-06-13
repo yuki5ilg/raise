@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,900;1,9..144,500&family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;700;900&family=Shippori+Mincho:wght@500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20260613g" />
+  <link rel="stylesheet" href="styles.css?v=20260613h" />
 </head>
 <body>
   <!-- ===== ログインゲート ===== -->
@@ -47,6 +47,7 @@
         </button>
       </div>
       <p id="loginError" class="login__error" role="alert"></p>
+      <button type="button" class="login__guest" id="guestBtn">ゲストとして見る</button>
     </form>
   </div>
 
@@ -328,8 +329,8 @@
         </a>
       </div>
       <div class="cal__attackwrap">
-        <a class="btn btn--primary" href="tools/yoyaku.html">⏱ 予約アタック準備を開く</a>
-        <p class="cal__attackhint">0時の先着予約に向けた時計＆手順メモ（別ページ）</p>
+        <a class="btn btn--primary" href="tools/yoyaku.html">⏱ 予約アタック準備 <span class="badge-soon">準備中</span></a>
+        <p class="cal__attackhint">0時の先着予約に向けた時計＆手順メモ（別ページ）。この機能は準備中です。</p>
       </div>
     </section>
 
@@ -372,10 +373,10 @@
     <section class="section join" id="join">
       <div class="join__card reveal">
         <p class="section__tag">MEMBERS</p>
-        <h2 class="join__title">次のシーズンも、高みへ。</h2>
+        <h2 class="join__title">メンバー紹介 <span class="badge-soon">準備中</span></h2>
         <p class="join__lead">
-          連絡はチームのLINEで。<br />
-          次も、みんなで全力で勝ちにいこう。
+          メンバー紹介・募集ページは準備中です。<br />
+          連絡はチームのLINEで。次も、みんなで全力で勝ちにいこう。
         </p>
         <div class="join__actions">
           <a href="#top" class="btn btn--primary">トップへ戻る</a>
@@ -438,6 +439,6 @@
   <div class="grain" aria-hidden="true"></div>
 
   <!-- ?v= はキャッシュ対策。script.js / styles.css を更新したらこの番号も上げる -->
-  <script src="script.js?v=20260613g"></script>
+  <script src="script.js?v=20260613h"></script>
 </body>
 </html>
