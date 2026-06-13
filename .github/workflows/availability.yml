@@ -51,9 +51,21 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/availability.json data/notify_state_2123.json
-          if ! git diff --cached --quiet; then
-            git commit -m "chore: 体育館の空き状況を更新 [skip ci]"
-            git push
-          else
+          if git diff --cached --quiet; then
             echo "変更なし"
+            exit 0
           fi
+          git commit -m "chore: 体育館の空き状況を更新 [skip ci]"
+          # 他のpushと衝突しても取り込んでpushし直す（最大5回）
+          for i in 1 2 3 4 5; do
+            if git push; then
+              echo "push成功 (試行 $i)"
+              exit 0
+            fi
+            echo "push失敗。リベースして再試行 ($i)"
+            # availability.json等が競合したら今回のスクレイプ結果(=こちら)を優先
+            git pull --rebase -X theirs --autostash origin main || git rebase --abort || true
+            sleep $((i * 3))
+          done
+          echo "push を5回試しても失敗しました" >&2
+          exit 1
