@@ -46,7 +46,10 @@ export default {
     const repo = env.REPO || "yuki5ilg/raise";
     // トークンの前後に空白/改行が混ざると "Bad credentials" になるので落とす
     const token = (env.GITHUB_TOKEN || "").trim();
-    if (!token) return json({ error: "GITHUB_TOKEN が未設定です" }, 500);
+    if (!token) {
+      console.error("設定エラー: 保存先トークンが未設定");
+      return json({ error: "ただいま投稿を受け付けられません（設定が未完了です）" }, 500);
+    }
     const gh = (path, init = {}) =>
       fetch(`https://api.github.com/repos/${repo}/${path}`, {
         ...init,
@@ -75,8 +78,8 @@ export default {
       if (res.status === 404) return { sha: undefined, text: null };
       if (!res.ok) {
         const e = await res.json().catch(() => ({}));
-        // GitHubの生メッセージ（例: "Bad credentials"）をそのまま見せる
-        throw new Error(`GitHub読み取り失敗(${res.status}): ${e.message || path}`);
+        console.error(`read fail ${res.status} ${path}: ${e.message || ""}`);
+        throw new Error("読み込みに失敗しました");
       }
       const data = await res.json();
       return { sha: data.sha, text: b64decode(data.content) };
@@ -88,14 +91,18 @@ export default {
       });
       if (!res.ok) {
         const e = await res.json().catch(() => ({}));
-        throw new Error(e.message || `GitHub書き込み失敗: ${path}`);
+        console.error(`write fail ${res.status} ${path}: ${e.message || ""}`);
+        throw new Error("保存に失敗しました");
       }
       return res.json();
     };
     const deleteFile = async (path, message) => {
       const res = await gh(`contents/${path}`);
       if (res.status === 404) return; // すでに無い
-      if (!res.ok) throw new Error(`GitHub読み取り失敗(${res.status}): ${path}`);
+      if (!res.ok) {
+        console.error(`read-before-delete fail ${res.status} ${path}`);
+        throw new Error("削除に失敗しました");
+      }
       const data = await res.json();
       const del = await gh(`contents/${path}`, {
         method: "DELETE",
@@ -103,7 +110,8 @@ export default {
       });
       if (!del.ok && del.status !== 404) {
         const e = await del.json().catch(() => ({}));
-        throw new Error(e.message || `GitHub削除失敗: ${path}`);
+        console.error(`delete fail ${del.status} ${path}: ${e.message || ""}`);
+        throw new Error("削除に失敗しました");
       }
     };
 

@@ -1371,16 +1371,20 @@ body {
      マーキー／グレイン／フッター刷新／カレンダー安定化）
    ===================================================================== */
 
-/* ===== Gallery: マソンリーをやめてモザイクグリッドに（チラつき解消） ===== */
+/* ===== Gallery: 行優先グリッド（左上→右上→左下…の並び・全体表示） ===== */
 .gallery-grid {
-  column-count: 3;
-  column-gap: 14px;
+  column-count: unset;
+  column-gap: unset;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: start;       /* 各画像は行の上端ぞろえ（高さは自然のまま） */
+  gap: 14px;
   max-width: 860px;
   margin: 0 auto;
 }
 .gallery__item {
-  margin: 0 0 14px;
-  break-inside: avoid;
+  margin: 0;
+  break-inside: auto;
   border-radius: 18px;
   overflow: hidden;
   box-shadow: var(--shadow-soft);
@@ -1409,8 +1413,7 @@ body {
   .gallery__item:hover::after { opacity: 1; }
 }
 @media (max-width: 560px) {
-  .gallery-grid { column-count: 2; column-gap: 10px; }
-  .gallery__item { margin-bottom: 10px; }
+  .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
 }
 
 /* ===== Lightbox ===== */

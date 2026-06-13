@@ -309,7 +309,7 @@ function initGallery() {
   if (selDelete) {
     selDelete.addEventListener("click", async () => {
       if (!selected.size) { alert("削除する写真を選んでね"); return; }
-      if (!apiUrl("/delete-photo")) { alert("アップロードAPIが未設定です"); return; }
+      if (!apiUrl("/delete-photo")) { alert("ただいまアップロードを利用できません"); return; }
       if (!confirm(`${selected.size}枚を削除する？`)) return;
       if (!(await ensureVaultKey())) return;
       selDelete.disabled = true;
@@ -343,7 +343,7 @@ function initGallery() {
         if (p && (p.alt || "") !== val) changes.push({ p, alt: val });
       });
       if (changes.length) {
-        if (!apiUrl("/update-photo")) { alert("アップロードAPIが未設定です"); return; }
+        if (!apiUrl("/update-photo")) { alert("ただいまアップロードを利用できません"); return; }
         if (!(await ensureVaultKey())) return;
         let ok = 0;
         for (const c of changes) {
@@ -508,7 +508,7 @@ function initUpload() {
 
   const needSetup = (msgEl) => {
     if (api) return false;
-    msgEl.textContent = "アップロードAPIが未設定です（worker/README.md の手順でセットアップしてね）";
+    msgEl.textContent = "ただいまアップロードを利用できません（少し待っても出ないときは管理者へ）";
     return true;
   };
 
@@ -878,7 +878,7 @@ function initVideos() {
 
   // 非公開の削除（videos.json）
   const deletePub = async (video) => {
-    if (!apiUrl("/delete-video")) { alert("アップロードAPIが未設定です"); return; }
+    if (!apiUrl("/delete-video")) { alert("ただいまアップロードを利用できません"); return; }
     if (!confirm(`「${video.title || "この動画"}」を削除する？`)) return;
     if (!(await ensureVaultKey())) return;
     try {
@@ -895,7 +895,7 @@ function initVideos() {
 
   // 限定の削除（復号→除外→再暗号化）
   const deleteVault = async (video) => {
-    if (!apiUrl("/put-vault")) { alert("アップロードAPIが未設定です"); return; }
+    if (!apiUrl("/put-vault")) { alert("ただいまアップロードを利用できません"); return; }
     if (!confirm(`「${video.title || "この動画"}」を削除する？`)) return;
     const pw = vaultPassword || (await ensureVaultKey());
     if (!pw) return;
