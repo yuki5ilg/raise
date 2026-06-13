@@ -14,3 +14,9 @@
 name = "raise-upload"
 main = "worker/worker.js"
 compatibility_date = "2025-01-01"
+
+# お問い合わせメール送信（Cloudflare Email Workers）。
+# 宛先は Email Routing で認証済みの destination_address のみ許可される。
+[[send_email]]
+name = "CONTACT_EMAIL"
+destination_address = "yuki5ilg@gmail.com"

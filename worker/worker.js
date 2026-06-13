@@ -16,15 +16,27 @@
  * 削除や限定公開の保護は「ブラウザ側で 3810 で private.enc を復号できるか」で行う
  * （限定動画の閲覧と同じ仕組み）。Worker側に削除用パスワードは持たせない。
  *
+ * お問い合わせ(/contact)は Cloudflare Email Workers の send_email バインディングで送信する。
+ *   - wrangler.toml の [[send_email]] name="CONTACT_EMAIL" で有効化
+ *   - 宛先(To)は Email Routing で「認証済みの宛先アドレス」のみ可（=Gmail）
+ *   - 差出人(From)は自ドメイン(yuki5ilg.com)のアドレス
+ *
  * 環境変数（Workerの Settings → Variables で設定）:
  *   GITHUB_TOKEN   … Fine-grained PAT（対象リポジトリの Contents: Read and write）※必須・Secret推奨
- *   RESEND_API_KEY … お問い合わせ送信に使う Resend のAPIキー（/contact用・Secret推奨）
- *   CONTACT_TO     … 問い合わせの宛先メール（省略可。既定 "yuki@yuki5ilg.com"）
- *   CONTACT_FROM   … 差出人（省略可。既定は Resend の onboarding@resend.dev。
- *                    ドメイン認証後は "raise <contact@yuki5ilg.com>" 等にする）
+ *   CONTACT_FROM   … 問い合わせの差出人（省略可。既定 "raise-contact@yuki5ilg.com"）
+ *   CONTACT_TO     … 問い合わせの宛先（省略可。既定 "yuki5ilg@gmail.com"。要・認証済み宛先）
  *   REPO           … 省略可。既定 "yuki5ilg/raise"
  *   ALLOWED_ORIGIN … 省略可。CORSで許可するオリジン。未設定なら "*"（どこからでも許可）
  */
+import { EmailMessage } from "cloudflare:email";
+
+// 文字列をUTF-8でbase64化（日本語メールの件名/本文用）
+function b64utf8(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = "";
+  bytes.forEach((b) => (bin += String.fromCharCode(b)));
+  return btoa(bin);
+}
 
 export default {
   async fetch(request, env) {
@@ -49,7 +61,7 @@ export default {
       return json({ error: "JSONが不正です" }, 400);
     }
 
-    // ===== お問い合わせ（GitHub不要・Resendでメール送信）=====
+    // ===== お問い合わせ（GitHub不要・Cloudflare Email Workersで送信）=====
     // 投稿用トークンとは無関係に動くよう、トークンチェックより前で処理する。
     if (new URL(request.url).pathname === "/contact") {
       const name = String(body.name || "").trim();
@@ -59,25 +71,29 @@ export default {
       if (String(body.company || "").trim()) return json({ ok: true });
       if (!name || !message) return json({ error: "お名前とメッセージを入力してください" }, 400);
       if (message.length > 5000) return json({ error: "メッセージが長すぎます" }, 400);
-      const key = (env.RESEND_API_KEY || "").trim();
-      if (!key) {
-        console.error("設定エラー: RESEND_API_KEY 未設定");
+      if (!env.CONTACT_EMAIL) {
+        console.error("設定エラー: send_email バインディング(CONTACT_EMAIL)未設定");
         return json({ error: "ただいまお問い合わせを受け付けられません" }, 500);
       }
-      const payload = {
-        from: env.CONTACT_FROM || "raise お問い合わせ <onboarding@resend.dev>",
-        to: env.CONTACT_TO || "yuki@yuki5ilg.com",
-        subject: `【raise】お問い合わせ: ${name}`,
-        text: `お名前: ${name}\n連絡先: ${email || "(未記入)"}\n\n${message}`,
-      };
-      if (/.+@.+\..+/.test(email)) payload.reply_to = email; // 返信先を送信者に
-      const r = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!r.ok) {
-        console.error("contact send fail", r.status, await r.text().catch(() => ""));
+      const fromAddr = env.CONTACT_FROM || "raise-contact@yuki5ilg.com";
+      const toAddr = env.CONTACT_TO || "yuki5ilg@gmail.com"; // ※Email Routingで認証済みの宛先のみ
+      const replyTo = /.+@.+\..+/.test(email) ? email : "";
+      const subject = `【raise】お問い合わせ: ${name}`;
+      const text = `お名前: ${name}\n連絡先: ${email || "(未記入)"}\n\n${message}\n`;
+      // UTF-8 を安全に送るため、件名はRFC2047(B符号化)、本文はbase64で組み立てる
+      const raw =
+        `From: raise <${fromAddr}>\r\n` +
+        `To: ${toAddr}\r\n` +
+        (replyTo ? `Reply-To: ${replyTo}\r\n` : "") +
+        `Subject: =?UTF-8?B?${b64utf8(subject)}?=\r\n` +
+        `MIME-Version: 1.0\r\n` +
+        `Content-Type: text/plain; charset="UTF-8"\r\n` +
+        `Content-Transfer-Encoding: base64\r\n\r\n` +
+        b64utf8(text).replace(/(.{76})/g, "$1\r\n");
+      try {
+        await env.CONTACT_EMAIL.send(new EmailMessage(fromAddr, toAddr, raw));
+      } catch (e) {
+        console.error("contact send fail:", e && e.message);
         return json({ error: "送信に失敗しました。時間をおいてお試しください" }, 502);
       }
       return json({ ok: true });
