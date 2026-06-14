@@ -136,11 +136,14 @@ img { max-width: 100%; display: block; }
   align-items: center;
   justify-content: space-between;
   padding: 18px clamp(20px, 5vw, 48px);
+  /* サイドバー（モバイルメニュー）と同じ色 */
+  background: rgba(247, 240, 228, 0.97);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   transition: background 0.3s, backdrop-filter 0.3s, padding 0.3s, box-shadow 0.3s;
 }
 .header.scrolled {
-  background: rgba(245, 236, 220, 0.85);
-  backdrop-filter: blur(14px);
+  background: rgba(247, 240, 228, 0.97);
   box-shadow: 0 4px 20px rgba(80, 55, 25, 0.08);
   padding-top: 12px;
   padding-bottom: 12px;
@@ -329,6 +332,17 @@ img { max-width: 100%; display: block; }
   max-width: var(--maxw);
   margin: 0 auto;
   padding: clamp(70px, 12vw, 130px) clamp(20px, 5vw, 48px);
+}
+/* チャプターごとに背景をちょこっと変える（全幅の帯を交互に敷く） */
+#champions, #gallery, #availability, #contact { position: relative; }
+#champions::before, #gallery::before, #availability::before, #contact::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 0; bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 100vw;
+  background: var(--bg-soft);
 }
 .section__head { text-align: center; margin-bottom: 56px; }
 .section__tag {
