@@ -1,5 +1,5 @@
 {
-  "updated": "2026-06-24T20:21+09:00",
+  "updated": "2026-06-24T20:32+09:00",
   "source": "https://shisetsu-yoyaku.jp/ajisai/yoyaku/ShisetsuMultiSelect.cgi",
   "note": "あじさいネット（神戸市 施設予約）の空き状況照会より自動取得。ok=1面 ok2=2面 ok3=3面以上 / full=予約済み closed=休館。実際の予約は公式サイトで。",
   "slots": [
